@@ -1,4 +1,4 @@
-# Hybridization_spatial_HMZ
+# Hybridization_spatial_HMHZ
 Decomposing the gut community of hybrid house mice identifies host genetics and spatial effects
 
 R/1_filtering.R --> quality filtering ASVs per amplicon and merging.
