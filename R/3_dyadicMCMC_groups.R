@@ -42,12 +42,13 @@ PS.TSS <- readRDS("tmp/PS.TSS_filtered.rds")
 
 Bac <- subset_taxa(PS.TSS, Kingdom %in%"Bacteria")
 
-Bac
-
 ############# First create dyad data#######################
 key <- data.frame(ID=sample_data(Bac)$Mouse_ID)
 metadt <- sample_data(Bac)
 
+doData <- FALSE
+
+if(doData){
 ####################
 ## 1) Jaccard distance
 JACM <- as.matrix(phyloseq::distance(Bac, method="jaccard", type="samples"))
@@ -508,6 +509,7 @@ model1_Fungi_chi <- readRDS("tmp/BRMmodel1_Fungi_chi.rds")
 model1_Fungi_chi
 
 model1_Fungi
+}
 
 ### uploading models
 model1 <- readRDS("tmp/BRMmodel1.rds")
@@ -518,36 +520,21 @@ model1_para <- readRDS("tmp/BRMmodel1_para.rds")
 model1_Fungi <- readRDS("tmp/BRMmodel1_Fungi.rds")
 model1_diet <- readRDS("tmp/BRMmodel1_diet.rds")
 model1_bac <- readRDS("tmp/BRMmodel1_bac.rds")
-
 model1_para_chi <- readRDS("tmp/BRMmodel1_para_chi.rds")
-
 model1_Fungi_chi <- readRDS("tmp/BRMmodel1_Fungi_chi.rds")
 model1_diet_chi <- readRDS("tmp/BRMmodel1_diet_chi.rds")
 model1_bac_chi <- readRDS("tmp/BRMmodel1_bac_chi.rds")
 
 print(model1, digits=3)
 print(model1_chi, digits=3)
-
 print(model1_para, digits=3)
-
 print(model1_Fungi, digits=3)
-
 print(model1_diet, digits=3)
-
 print(model1_bac, digits=4)
-
 print(model1_para_chi, digits=3)
-
 print(model1_Fungi_chi, digits=3)
-
 print(model1_diet_chi, digits=3)
-
 print(model1_bac_chi, digits=4)
-
-
-para <- summary(model1_para)$fixed
-
-summary(model1)$fixed
 
 res.fun <- function(model1_para, name, ASV){
     para <- summary(model1_para)$fixed
@@ -564,13 +551,9 @@ res <- rbind(res, res.fun(model1_bac, "Bacteria", 383))
 res <- rbind(res, res.fun(model1_diet, "Diet", 45))
 res <- rbind(res, res.fun(model1_Fungi, "Fungi", 65))
 res <- rbind(res, res.fun(model1, "Full model", 588))
-
 res$Domain[res$Domain=="Diet"] <- "Plants"
-
 res$Domain[res$Domain=="Parasite"] <- "Parasites"
-
 res$Domain <- factor(res$Domain, levels=c( "Bacteria", "Parasites", "Fungi", "Plants", "Full model"))
-
 library(scales)
 #coul=c("#154360", "#b71c1c", "#512e5f", "#0e6251")
 #coul=c("#edca82", "#097770", "#e0cdbe", "#a9c0a6")
@@ -602,7 +585,54 @@ re.plot <- ggplot(res, aes(x = Estimate, y = Effect, fill = Effect)) +
         legend.position="none")
 
 re.plot
-ggsave("fig/figure3.pdf", re.plot, width=150, height=180, units="mm", dpi=300)
+
+
+res <- res.fun(model1_para_chi, "Parasite", 11)
+res <- rbind(res, res.fun(model1_bac_chi, "Bacteria", 383))
+res <- rbind(res, res.fun(model1_diet_chi, "Diet", 45))
+res <- rbind(res, res.fun(model1_Fungi_chi, "Fungi", 65))
+res <- rbind(res, res.fun(model1_chi, "Full model", 588))
+res$Domain[res$Domain=="Diet"] <- "Plants"
+res$Domain[res$Domain=="Parasite"] <- "Parasites"
+res$Domain <- factor(res$Domain, levels=c( "Bacteria", "Parasites", "Fungi", "Plants", "Full model"))
+library(scales)
+#coul=c("#154360", "#b71c1c", "#512e5f", "#0e6251")
+#coul=c("#edca82", "#097770", "#e0cdbe", "#a9c0a6")
+coul=c("#F8B195","#F67280", "#6C5B7B", "#355C7D")
+
+#Spatial, Locality, genetic, hi
+
+res <- res[res$Effect%in%c("genetic_dist", "hi", "spatial", "locality1"),]
+
+re.plot2 <- ggplot(res, aes(x = Estimate, y = Effect, fill = Effect)) +
+    geom_errorbar(aes(xmin=lCI, xmax=uCI, colour=Effect), size=1, width=0.4)+
+        geom_point(shape = 21, size=3) +
+    scale_fill_manual(values = coul) +
+    scale_colour_manual(values = coul) +
+            xlab("Parameter estimate") +
+    ylab("") +
+    scale_y_discrete(labels = c("Genetic distances", "Hybridicity distances", "Shared locality", "Spatial distances")) +
+    geom_vline(xintercept=0, linetype="dashed", linewidth=1)+
+    facet_grid(Domain ~ ., scales = "free_y", space = "free_y")+
+    theme_classic(base_size=12)+
+    theme(
+        strip.text = element_text(face = "bold"),
+        panel.background = element_rect(fill = "white", color = NA),
+        panel.grid = element_blank(),
+        strip.background = element_rect(fill = "white", color = "black"),
+        panel.border = element_rect(color = "black", fill = NA),
+    #    axis.line = element_line(color = "black"),
+    #    plot.title = element_text(size = 12, face = "bold"),
+        legend.position="none")
+
+re.plot2
+
+Fig3 <- plot_grid(re.plot, re.plot2, labels="auto")
+
+ggsave("fig/figure3.pdf", Fig3, width=200, height=180, units="mm", dpi=300)
+
+
+############## ending analysis here for now ##################
 
 ############################################################################################
 ######## Decomposing the Fungi model
