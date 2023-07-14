@@ -243,14 +243,19 @@ cor.test(data.dyad$genetic_dist, data.dyad$HI)
 # plotting geographic location
 capital <-world.cities[c(world.cities$capital==1),]
 capital[grep("Republic", capital$country.etc),]
-capital <- capital[capital$country.etc%in%c("Germany", "Czech Republic"),]
+capital <- capital[capital$country.etc%in%"Germany",]
 world <- ne_countries(scale="medium", returnclass="sf")
 europe <- ne_countries(continent="Europe", returnclass="sf", scale="medium")
 metadf <- PS.TSS@sam_data
 coordf <- data.frame(Lon=metadf$Longitude, Lat=metadf$Latitude)
+
+## shape of federal states
+boundaries <- 
+  st_read("tmp/VG250_Bundeslaender_esri.geojson")
+
 sampling <-
     ggplot(data=europe)+
-    geom_sf()+
+  geom_sf(data = boundaries, fill = NA, color = "black")+
     geom_point(data=metadf,aes(x=Longitude, y=Latitude, fill=HI), size=1, alpha=0.5, shape=21, colour="white")+
     coord_sf(xlim=c(6, 16), ylim=c(47, 55), expand=FALSE)+
     geom_point(shape=4, data=capital, aes(x=long, y=lat), size=2, col="black")+
@@ -260,7 +265,8 @@ sampling <-
                  dist_unit = "km", orientation = FALSE, legend_size = 2)+
     theme_bw(base_size=10)+
     theme(panel.border = element_blank(), panel.grid.major = element_blank(),
-            panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))
+            panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))+
+  ggspatial::annotation_north_arrow(location = "tr")
 
 gen_HI <- ggplot(data = data.dyad, aes(x= genetic_dist, y= HI))+
     geom_bin2d(bins=20)+
