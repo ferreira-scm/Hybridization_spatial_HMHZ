@@ -111,8 +111,8 @@ fPS@sam_data[,Nkeep] <- Immune[match(PS.TSS@sam_data$Mouse_ID, Immune$Mouse_ID),
 PS.TSS@sam_data[,Nkeep] <- Immune[match(PS.TSS@sam_data$Mouse_ID, Immune$Mouse_ID),Nkeep]
 
 #hybridicity
-PS.TSS@sam_data$hi <- 0.5-abs(PS.TSS@sam_data$HI-0.5)
-fPS@sam_data$hi <- 0.5-abs(fPS@sam_data$HI-0.5)
+PS.TSS@sam_data$hi <- 2*(0.5-abs(PS.TSS@sam_data$HI-0.5))
+fPS@sam_data$hi <- 2*(0.5-abs(fPS@sam_data$HI-0.5))
 
 ##### we are going to input that BMI value missing, and the HI values missing too.
 library(mice)

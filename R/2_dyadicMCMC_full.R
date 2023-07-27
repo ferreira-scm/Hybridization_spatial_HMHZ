@@ -35,12 +35,10 @@ library(gganimate)
 library(posterior)
 library(distributional)
 library(tidybayes)
-library(microshades)
 library(cowplot)
 library(ggpmisc)
-
 library("ggmap")
-library(sf)
+library(sf, lib.loc="/usr/local/lib/R/site-library")
 library("rnaturalearthdata")
 library("rnaturalearth")
 library(legendMap)
@@ -253,12 +251,14 @@ coordf <- data.frame(Lon=metadf$Longitude, Lat=metadf$Latitude)
 boundaries <- 
   st_read("tmp/VG250_Bundeslaender_esri.geojson")
 
+library("ggspatial")
+
 sampling <-
     ggplot(data=europe)+
   geom_sf(data = boundaries, fill = NA, color = "black")+
-    geom_point(data=metadf,aes(x=Longitude, y=Latitude, fill=HI), size=1, alpha=0.5, shape=21, colour="white")+
+  geom_point(data=metadf,aes(x=Longitude, y=Latitude, fill=HI), size=1.5, alpha=0.5, shape=21, colour="white")+
     coord_sf(xlim=c(6, 16), ylim=c(47, 55), expand=FALSE)+
-    geom_point(shape=4, data=capital, aes(x=long, y=lat), size=2, col="black")+
+ #   geom_point(shape=4, data=capital, aes(x=long, y=lat), size=2, col="black")+
     scale_fill_scico("Hybrid index", palette="roma", direction=-1)+
     scale_bar(lon = 6.5, lat = 54.5, arrow_length = 10, arrow_distance = 50,
                  distance_lon = 50, distance_lat = 7, distance_legend = 20,
@@ -279,6 +279,7 @@ gen_HI <- ggplot(data = data.dyad, aes(x= genetic_dist, y= HI))+
     theme_bw(base_size=10)+
     xlim(0,1)+
     ylim(0,1)+
+    theme_classic(base_size=10)+
     theme(axis.title.x = element_text(vjust = 0, size = 10),
           axis.title.y = element_text(vjust = 2, size = 10),
           legend.position="bottom")
@@ -291,6 +292,7 @@ hi_gen <-ggplot(data = data.dyad, aes(x= genetic_dist, y= hi))+
                        parse = TRUE, size=2) +
     ylab("Hybridicity distance")+
     xlab("Genetic distance")+
+    theme_classic(base_size=10)+
     theme_bw(base_size=10)+
     theme(axis.title.x = element_text(vjust = 0, size = 10),
           axis.title.y = element_text(vjust = 2, size = 10),
@@ -304,7 +306,7 @@ hi_HI <-ggplot(data = data.dyad, aes(x= HI, y= hi))+
                parse = TRUE, size=2) +
     ylab("Hybridicity distance")+
     xlab("Hybrid index distance")+
-    theme_bw(base_size=10)+
+    theme_classic(base_size=10)+
     theme(axis.title.x = element_text(vjust = 0, size = 10),
           axis.title.y = element_text(vjust = 2, size = 10),
           legend.position="bottom")
@@ -314,15 +316,10 @@ hi_Hindex <-ggplot(data = metadt, aes(x= HI, y= hi))+
         scale_fill_scico(palette="bamako", direction=-1)+
     ylab("Hybridicity")+
     xlab("Hybrid index")+
-    theme_bw(base_size=10)+
+    theme_classic(base_size=10)+
     theme(axis.title.x = element_text(vjust = 0, size = 10),
                     axis.title.y = element_text(vjust = 2, size = 10))
 
-ab <- plot_grid(sampling, hi_Hindex, ncol=2, labels=c("a", "b"))
-cde <- plot_grid(hi_HI, gen_HI, hi_gen, ncol=3, labels=c("c", "d", "e"))
-Fig2 <- plot_grid(ab, cde, nrow=2, rel_heights=c(0.9, 1))
-
-ggsave("fig/Figure2.pdf", Fig2, width=170, height=150, units="mm", dpi=300)
 
 ## Let's model
 #model1<-brm(Microbiome_similarity~1+ spatial+locality+genetic_dist*hi+year+BMI+sex+
@@ -366,24 +363,80 @@ print(model1, digits=3)
 #saveRDS(model1_chi, "tmp/BRMmodel1_chi.rds")
 model1_chi <- readRDS("tmp/BRMmodel1_chi.rds")
 
-#model1_HI_chi<-brm(Microbiome_similarity_chi~1+ spatial+locality+HI*hi+year+BMI+sex+
-#                (1|mm(IDA,IDB)),
-#                data = data.dyad,
-#                family= "gaussian",
-#                warmup = 1000, iter = 3000,
-#                cores = 20, chains = 4,
-#                inits=0)
-#model1_HI_chi <- add_criterion(model1_HI_chi, "loo")
-#saveRDS(model1_HI_chi, "tmp/BRMmodel1_HI_chi.rds")
+model1_HI_chi<-brm(Microbiome_similarity_chi~1+ spatial+locality+HI*hi+year+BMI+sex+
+                (1|mm(IDA,IDB)),
+                data = data.dyad,
+                family= "gaussian",
+                warmup = 1000, iter = 3000,
+                cores = 40, chains = 4,
+                inits=0)
+model1_HI_chi <- add_criterion(model1_HI_chi, "loo")
+saveRDS(model1_HI_chi, "tmp/BRMmodel1_HI_chi.rds")
 model1_HI_chi <- readRDS("tmp/BRMmodel1_HI_chi.rds")
 
 loo_compare(model1, model1_HI)
 loo_compare(model1_chi, model1_HI_chi)
 
-loo(model1_chi)
+loo(model1_chi, save_psis = TRUE)
 loo(model1)
 
-#MCMCglmm gaussian model
+
+gd <- conditional_effects(model1, "genetic_dist", ask=FALSE)
+gd <- as.data.frame(gd$genetic_dist)
+hi <- conditional_effects(model1_HI, "HI", ask=FALSE)
+hi <- as.data.frame(hi$HI)
+
+hi$HI
+
+f <- ggplot(hi, aes(x=HI, y=estimate__))+
+    geom_line(data=gd, aes(y=estimate__, x=genetic_dist), size=1, colour="#00008B")+
+    geom_ribbon(data=gd, aes(ymin=lower__, ymax=upper__, x=genetic_dist), fill="#00008B", alpha=0.2)+
+        geom_ribbon(aes(ymin=lower__, ymax=upper__), fill="#7A2048", alpha=0.2)+
+        geom_line(size=1, colour="#7A2048")+
+    scale_x_continuous(limits=c(0,1), expand=c(0,0))+
+#    scale_y_continuous(limits=c(0,0.3), expand=c(0,0))+
+    xlab("distances")+
+    ylab("Jaccard similarity distance estimate")+
+    theme_classic(base_size=10)+
+    theme(axis.title.x = element_text(vjust = 0, size = 10),
+          axis.title.y = element_text(vjust = 2, size = 10))
+
+
+
+gd2 <- conditional_effects(model1_chi, "genetic_dist", ask=FALSE)
+gd2 <- as.data.frame(gd2$genetic_dist)
+
+hi2 <- conditional_effects(model1_HI_chi, "HI", ask=FALSE)
+hi2 <- as.data.frame(hi2$HI)
+
+
+
+g <- ggplot(hi2, aes(x=HI, y=estimate__))+
+    geom_line(data=gd2, aes(y=estimate__, x=genetic_dist), size=1, colour="#00008B")+
+    geom_ribbon(data=gd2, aes(ymin=lower__, ymax=upper__, x=genetic_dist), fill="#00008B", alpha=0.2)+
+        geom_line(size=1, colour="#7A2048")+
+    geom_ribbon(aes(ymin=lower__, ymax=upper__), fill="#7A2048", alpha=0.2)+
+    scale_x_continuous(limits=c(0,1), expand=c(0,0))+
+#    scale_y_continuous(limits=c(0,0.5), expand=c(0,0))+
+    xlab("distances")+
+    ylab("Chi-square similary distance estimate")+
+    theme_classic(base_size=10)+
+    theme(axis.title.x = element_text(vjust = 0, size = 10),
+          axis.title.y = element_text(vjust = 2, size = 10))
+
+
+head(hi2)
+
+ab <- plot_grid(sampling, hi_Hindex, ncol=2, labels=c("a", "b"))
+cde <- plot_grid(hi_HI, gen_HI, hi_gen, ncol=3, labels=c("c", "d", "e"))
+fg <- plot_grid(f,g, ncol=2, labels=c("f", "g"))
+Fig2 <- plot_grid(ab, cde, fg, nrow=3, rel_heights=c(0.9, 1, 0.9))
+
+ggsave("fig/Figure1.pdf", Fig2, width=190, height=180, units="mm", dpi=300)
+
+
+
+
 #mcmcglmm_model<-MCMCglmm(Microbiome_similarity~1+spatial+locality+genetic_dist*hi+year+BMI+sex,
 #                            data=data.dyad,
 #                            family= "gaussian",
