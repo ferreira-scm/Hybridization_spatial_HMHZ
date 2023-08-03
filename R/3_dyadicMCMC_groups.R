@@ -36,484 +36,139 @@ library(gganimate)
 library(posterior)
 library(distributional)
 
+library(metagMisc)
 
 ### we don't include sex because it does not converge
 PS.TSS <- readRDS("tmp/PS.TSS_filtered.rds")
 
 Bac <- subset_taxa(PS.TSS, Kingdom %in%"Bacteria")
-
-############# First create dyad data#######################
-key <- data.frame(ID=sample_data(Bac)$Mouse_ID)
-metadt <- sample_data(Bac)
-
-doData <- FALSE
-
-if(doData){
-####################
-## 1) Jaccard distance
-JACM <- as.matrix(phyloseq::distance(Bac, method="jaccard", type="samples"))
-# transpose Jaccard disssimilary matrix to Jaccard similarty matrix
-JACM <- 1-JACM
-# sanity check
-all(rownames(JACM)==key)
-dimnames(JACM)<- c(key, key)
-
-## 2) Spatial distance matrix
-distance.df <- metadt[,c("Mouse_ID", "Longitude", "Latitude")]
-SPATM <- array(NA, c(length(distance.df$Mouse_ID),length(distance.df$Mouse_ID)))
-# derive matrix with spatial distances between each location
-for (i in 1:length(distance.df$Mouse_ID)){
-    for (j in 1:length(distance.df$Mouse_ID))
-    {SPATM[i,j]= sqrt((abs(distance.df$Longitude[i]-distance.df$Longitude[j]))^2+
-                      (abs(distance.df$Latitude[i]-distance.df$Latitude[j]))^2)
-    }
-}
-dimnames(SPATM)<- c(key, key)
-
-
-## 1) Chisq distance
-CHIM <- as.matrix(vegan::vegdist(Bac@otu_table, method="chisq"))
-
-# transpose Chi square disssimilary matrix to similarty matrix
-CHIM <- 1-CHIM
-# sanity check
-all(rownames(CHIM)==key)
-dimnames(CHIM)<- c(key, key)
-
-# 3) pairwise genetic distance based on genetic data
-# I actually need to get this from sota again
-sota <- read.csv("https://raw.githubusercontent.com/derele/Mouse_Eimeria_Field/master/data_products/SOTA_Data_Product.csv")
-gen <- c("mtBamH", "YNPAR", "X332", "X347", "X65", "Tsx", "Btk", "Syap1",
-         "Es1","Gpd1","Idh1","Mpi","Np", "Sod1", "Es1C", "Gpd1C", "Idh1C",
-         "MpiC","NpC", "Sod1C")
-sota <- sota[sota$Mouse_ID%in%distance.df$Mouse_ID,c("Mouse_ID", gen)]
-sota <- sota[match(distance.df$Mouse_ID, sota$Mouse_ID),]
-all(sota$Mouse_ID==distance.df$Mouse_ID)
-rownames(sota) <- sota$Mouse_ID
-sota$Mouse_ID <- NULL
-gen.dis <- dist.gene(sota, method = "pairwise", pairwise.deletion = TRUE)
-gen.dis <- as.matrix(gen.dis)
-dimnames(gen.dis) <- c(key, key)
-
-## 3) Sex pairs
-Sex_frame<-metadt[,c("Mouse_ID","Sex")]
-Sex_frame$Mouse_ID<-as.character(Sex_frame$Mouse_ID)
-Sex_frame$Sex<-as.character(Sex_frame$Sex)
-#Create an empty character matrix to fill with characters
-SEXM<-array(as.character(NA),c(nrow(Sex_frame),nrow(Sex_frame)))
-
-for(i in 1:nrow(Sex_frame)){
-    for(j in 1:nrow(Sex_frame)){
-        if(Sex_frame$Sex[i]=="F" & Sex_frame$Sex[i]==Sex_frame$Sex[j]){
-            SEXM[i,j]= "FF"}
-        if(Sex_frame$Sex[i]=="M" & Sex_frame$Sex[i]==Sex_frame$Sex[j]){
-           SEXM[i,j]= "MM"}
-        if( Sex_frame$Sex[i]!=Sex_frame$Sex[j]){
-            SEXM[i,j]= "FM"}
-    }
-}
-dimnames(SEXM)<-c(key, key)
-
-# 4) Making BMI distances
-#Create data frame with each sample name (character) and sampling time (numeric)
-BMI_frame<-metadt[,c("Mouse_ID", "BMI")]
-#Create an empty matrix to fill with distances
-BMIM<-array(0,c(nrow(BMI_frame),nrow(BMI_frame)))
-#Derive matrix with time distances between each sample using abs()-function
-for (i in 1:nrow(BMI_frame)){
-    for (j in 1:nrow(BMI_frame))
-    {BMIM[i,j]=abs(BMI_frame$BMI[i] -BMI_frame$BMI[j])
-    }
-}
-dimnames(BMIM) <- c(key, key)
-
-# 6) Create farm/Locality matrix: 
-#Create data frame with each Individual name (character) and their Age (Character)
-Loc_frame<-metadt[,c("Mouse_ID","Locality")]
-#Create an empty numeric matrix to fill with distances
-LocM<-array(0,c(nrow(Loc_frame),nrow(Loc_frame)))
-#Derive matrix with binary locality similarity between each sample
-for(i in 1:nrow(Loc_frame)){
-    for(j in 1:nrow(Loc_frame)){
-        if(Loc_frame$Locality[i]==Loc_frame$Locality[j]){
-            LocM[i,j]= "1"
-        } else{
-            LocM[i,j]= "0"
-        }
-    }
-}
-#Note that Locality similarity matrix has rownames and colnames in the same order as key
-all(rownames(LocM)==key$ID)
-dimnames(LocM) <- c(key, key)
-
-
-# 6) this matrix will describe the distance in years between samples
-#Transform dates into a numeric variable
-metadt$Year <- as.numeric(metadt$Year)
-#Create data frame with each sample name (character) and sampling time (numeric)
-SampleTime_frame<-metadt[,c("Mouse_ID","Year")]
-#Create an empty matrix to fill with distances
-TEMPM<-array(0,c(nrow(SampleTime_frame),nrow(SampleTime_frame)))
-#Derive matrix with time distances between each sample using abs()-function
-for (i in 1:nrow(SampleTime_frame)){
- for (j in 1:nrow(SampleTime_frame))
-{TEMPM[i,j]=abs(SampleTime_frame$Year[i] -SampleTime_frame$Year[j])
-  }
-}
-dimnames(TEMPM)<-c(key,key)
-
-# 7) Making HI distances
-#Create data frame with each sample name (character) and sampling time (numeric)
-HI_frame<-metadt[,c("Mouse_ID", "HI")]
-#Create an empty matrix to fill with distances
-HIM<-array(0,c(nrow(HI_frame),nrow(HI_frame)))
-#Derive matrix with time distances between each sample using abs()-function
-for (i in 1:nrow(HI_frame)){
-    for (j in 1:nrow(HI_frame))
-    {HIM[i,j]=abs(HI_frame$HI[i] -HI_frame$HI[j])
-    }
-}
-dimnames(HIM) <- c(key, key)
-
-# 7) Making hi distances
-#Create data frame with each sample name (character) and sampling time (numeric)
-hi_frame<-metadt[,c("Mouse_ID", "hi")]
-#Create an empty matrix to fill with distances
-hiM<-array(0,c(nrow(hi_frame),nrow(hi_frame)))
-#Derive matrix with time distances between each sample using abs()-function
-for (i in 1:nrow(hi_frame)){
-    for (j in 1:nrow(hi_frame))
-    {hiM[i,j]=abs(hi_frame$hi[i] -hi_frame$hi[j])
-    }
-}
-dimnames(hiM) <- c(key, key)
-
-
-# here are our matrices
-str(BMIM)
-str(SPATM)
-str(JACM)
-str(gen.dis)
-str(SEXM)
-str(LocM)
-str(HIM)
-str(hiM)
-str(TEMPM)
-#First unravel the matrices into vectors matching the lower quantile of each matrix.
-
-#From numeric matrices, this can be done by making a list (c()) of the distance object (dist()) derived from the matrix. as.dist() by default includes only the lower quantile of the matrix and excludes the diagonal.
-#From categorical matrices, this can be done by making a list (c()) of the lower quantile of the matrix with lower.tri() -function.
-
-jac<-c(as.dist(JACM))
-bmi<-c(as.dist(BMIM))
-spa<-c(as.dist(SPATM))
-gen<-c(as.dist(gen.dis))
-sex<-c(SEXM[lower.tri(SEXM)])
-loc <- as.character(c(as.dist(LocM)))
-HIm <- c(as.dist(HIM))
-him <- c(as.dist(hiM))
-tempm <- c(as.dist(TEMPM))
-chi <- c(as.dist(CHIM))
-
-#Combine these vectors into a data frame
-data.dyad<-data.frame(BMI=bmi,Microbiome_similarity=jac,spatial=spa, genetic_dist=gen, locality=loc, HI=HIm, year=tempm, hi=him, sex=sex, MS=chi)
-
-data.dyad$locality <- as.factor(data.dyad$locality)
-
-#Now all we need to do is add the identities of both individuals in each dyad as separate columns into the data frame and exclude self-comparisons (as these are not meaningful).
-
-# extracting Individual-combinations present in the matrices
-list<-expand.grid(key$ID, key$ID)
-
-str(list)
-
-# This created individual-to-same-individual pairs as well. Get rid of these:
-list<-list[which(list$Var1!=list$Var2),]
-
-# this still has both quantiles in--> add 'unique' key
-list$key <- apply(list, 1, function(x)paste(sort(x), collapse=''))
-list<-subset(list, !duplicated(list$key))
-
-# sanity check that the Individual name combinations are in the same exact order as the lower quantile value vector of the matrices
-i=nrow(key)
-JACM[which(rownames(JACM)==list$Var1[i]),which(colnames(JACM)==list$Var2[i])]==jac[i]
-
-# add the names of both individuals participating in each dyad into the data frame
-data.dyad$IDA<-list$Var2
-data.dyad$IDB<-list$Var1
-# Make sure you have got rid of all self comparisons
-data.dyad<-data.dyad[which(data.dyad$IDA!=data.dyad$IDB),]
-
-
-######################### Now we model the data ####################
-
-## sex combination into a factor
-data.dyad$sex <- factor(data.dyad$sex, levels=c("MM", "FM", "FF"))
-
-#scale all predictors to range between 0-1 if they are not already naturally on that scale
-#define scaling function:
-range.use <- function(x,min.use,max.use){ (x - min(x,na.rm=T))/(max(x,na.rm=T)-min(x,na.rm=T)) * (max.use - min.use) + min.use }
-scalecols<-c("spatial","genetic_dist", "BMI", "year", "hi")
-for(i in 1:ncol(data.dyad[,which(colnames(data.dyad)%in%scalecols)])){
-    data.dyad[,which(colnames(data.dyad)%in%scalecols)][,i]<-range.use(data.dyad[,which(colnames(data.dyad)%in%scalecols)][,i],0,1)
-    }
-
-#saveRDS(data.dyad, "tmp/data.dyad.RDS")
-#data.dyad <- readRDS("tmp/data.dyad.RDS")
-
-#hist(data.dyad$Microbiome_similarity)
-# proportional values semi-normally distributed limited between 0 and 1 not including 1 and 0 --> best use betaregression, but gaussian would probably give similar estimates
-
-#model1_bac<-brm(Microbiome_similarity~1+ spatial+locality+genetic_dist*hi+year+BMI+sex+
-#                (1|mm(IDA,IDB)),
-#                data = data.dyad,
-#                family= "gaussian",
-#                warmup = 1000, iter = 3000,
-#                cores = 20, chains = 4,
-#               inits=0)
-#saveRDS(model1_bac, "tmp/BRMmodel1_bac.rds")
-
-model1_bac_chi<-brm(MS~1+ spatial+locality+genetic_dist*hi+year+BMI+sex+
-                (1|mm(IDA,IDB)),
-                data = data.dyad,
-                family= "gaussian",
-                warmup = 1000, iter = 3000,
-                cores = 20, chains = 4,
-               inits=0)
-saveRDS(model1_bac_chi, "tmp/BRMmodel1_bac_chi.rds")
-
-model1_bac
-
-remove.packages('ggthemes')
-
-############## Parasites
-
 Parasite <- subset_taxa(PS.TSS, Genus %in%c("Eimeria", "Cryptosporidium", "Syphacia", "Aspiculuris", "Ascaridida", "Mastophorus","Trichuris", "Hymenolepis", "Tritrichomonas"))
-
-all(key == data.frame(ID=sample_data(Parasite)$Mouse_ID))
-
-####################
-## 1) Jaccard distance
-JACM <- as.matrix(phyloseq::distance(Parasite, method="jaccard", type="samples"))
-# transpose Jaccard disssimilary matrix to Jaccard similarty matrix
-JACM <- 1-JACM
-# sanity check
-all(rownames(JACM)==key)
-dimnames(JACM)<- c(key, key)
-
-jac<-c(as.dist(JACM))
-
-## 1) Chisq distance
-CHIM <- as.matrix(vegan::vegdist(Parasite@otu_table, method="chisq"))
-
-# transpose Chi square disssimilary matrix to similarty matrix
-CHIM <- 1-CHIM
-# sanity check
-all(rownames(CHIM)==key)
-dimnames(CHIM)<- c(key, key)
-
-chi<-c(as.dist(CHIM))
-#Combine these vectors into a data frame
-data.dyad<-data.frame(BMI=bmi,Microbiome_similarity=jac,spatial=spa, genetic_dist=gen, locality=loc, HI=HIm, year=tempm, hi=him, sex=sex, MS=chi)
-
-data.dyad$locality <- as.factor(data.dyad$locality)
-
-#Now all we need to do is add the identities of both individuals in each dyad as separate columns into the data frame and exclude self-comparisons (as these are not meaningful).
-
-# extracting Individual-combinations present in the matrices
-list<-expand.grid(key$ID, key$ID)
-
-# This created individual-to-same-individual pairs as well. Get rid of these:
-list<-list[which(list$Var1!=list$Var2),]
-
-# this still has both quantiles in--> add 'unique' key
-list$key <- apply(list, 1, function(x)paste(sort(x), collapse=''))
-list<-subset(list, !duplicated(list$key))
-
-# sanity check that the Individual name combinations are in the same exact order as the lower quantile value vector of the matrices
-i=nrow(key)
-JACM[which(rownames(JACM)==list$Var1[i]),which(colnames(JACM)==list$Var2[i])]==jac[i]
-
-# add the names of both individuals participating in each dyad into the data frame
-data.dyad$IDA<-list$Var2
-data.dyad$IDB<-list$Var1
-# Make sure you have got rid of all self comparisons
-data.dyad<-data.dyad[which(data.dyad$IDA!=data.dyad$IDB),]
-
-
-######################### Now we model the data ####################
-
-## sex combination into a factor
-data.dyad$sex <- factor(data.dyad$sex, levels=c("MM", "FM", "FF"))
-
-#scale all predictors to range between 0-1 if they are not already naturally on that scale
-#define scaling function:
-range.use <- function(x,min.use,max.use){ (x - min(x,na.rm=T))/(max(x,na.rm=T)-min(x,na.rm=T)) * (max.use - min.use) + min.use }
-scalecols<-c("spatial","genetic_dist", "BMI", "year", "hi")
-for(i in 1:ncol(data.dyad[,which(colnames(data.dyad)%in%scalecols)])){
-    data.dyad[,which(colnames(data.dyad)%in%scalecols)][,i]<-range.use(data.dyad[,which(colnames(data.dyad)%in%scalecols)][,i],0,1)
-    }
-
-#saveRDS(data.dyad, "tmp/data.dyad.RDS")
-#data.dyad <- readRDS("tmp/data.dyad.RDS")
-
-#hist(data.dyad$Microbiome_similarity)
-# proportional values semi-normally distributed limited between 0 and 1 not including 1 and 0 --> best use betaregression, but gaussian would probably give similar estimates
-
-## now let's take a look at correlation trends
-
-#model1_para<-brm(Microbiome_similarity~1+ spatial+locality+genetic_dist*hi+year+BMI+sex+
-#                (1|mm(IDA,IDB)),
-#                data = data.dyad,
-#                family= "gaussian",
-#                warmup = 1000, iter = 3000,
-#                cores = 20, chains = 4,
-#               inits=0)
-#saveRDS(model1_para, "tmp/BRMmodel1_para.rds")
-
-model1_para_chi<-brm(MS~1+ spatial+locality+genetic_dist*hi+year+BMI+sex+
-                (1|mm(IDA,IDB)),
-                data = data.dyad,
-                family= "gaussian",
-                warmup = 1000, iter = 3000,
-                cores = 20, chains = 4,
-               inits=0)
-saveRDS(model1_para_chi, "tmp/BRMmodel1_para_chi.rds")
-
-
-####### Diet
+Fungi <- subset_taxa(PS.TSS, Phylum %in% c("Mucoromycota", "Ascomycota", "Basidiomycota"))
 Diet <- subset_taxa(PS.TSS, Phylum %in% c("Anthophyta", "Phragmoplastophyta", "Charophyta", "Ochrophyta"))
 
-####################
-## 1) Jaccard distance
-JACM <- as.matrix(phyloseq::distance(Diet, method="jaccard", type="samples"))
-# transpose Jaccard disssimilary matrix to Jaccard similarty matrix
-JACM <- 1-JACM
-# sanity check
-all(rownames(JACM)==key)
-dimnames(JACM)<- c(key, key)
-jac<-c(as.dist(JACM))
-## 1) Chisq distance
-CHIM <- as.matrix(vegan::vegdist(Diet@otu_table, method="chisq"))
-# transpose Chi square disssimilary matrix to similarty matrix
-CHIM <- 1-CHIM
-# sanity check
-all(rownames(CHIM)==key)
-dimnames(CHIM)<- c(key, key)
+############# First create dyad data#######################
+data.dyad <- readRDS("tmp/data.dyad.RDS")
 
-chim<-c(as.dist(CHIM))
+## 1) Distances for bacteria
+jac_bac <- as.matrix(phyloseq::distance(Bac, method="jaccard", type="samples", binary=T))
+jac_bac[is.na(jac_bac)] <- 0 # defining those as 0 distances
+jac_bac <- 1-jac_bac
+jac_bac <- c(as.dist(jac_bac))
+ait_bac <- as.matrix(vegan::vegdist(Bac@otu_table, method="aitchison", pseudocount=1))
+ait_bac <- 1-ait_bac
+ait_bac <- c(as.dist(ait_bac))
+################## parasite
+jac_para <- as.matrix(phyloseq::distance(Parasite, method="jaccard", type="samples", binary=T))
+jac_para[is.na(jac_para)] <- 0 # defining those as 0 distances
+jac_para <- 1-jac_para
+jac_para <- c(as.dist(jac_para))
+ait_para <- as.matrix(vegan::vegdist(Parasite@otu_table, method="aitchison", pseudocount=1))
+ait_para <- 1-ait_para
+ait_para <- c(as.dist(ait_para))
+################## fungi
+jac_fun <- as.matrix(phyloseq::distance(Fungi, method="jaccard", type="samples", binary=T))
+jac_fun[is.na(jac_fun)] <- 0 # defining those as 0 distances
+jac_fun <- 1-jac_fun
+jac_fun <- c(as.dist(jac_fun))
+ait_fun <- as.matrix(vegan::vegdist(Fungi@otu_table, method="aitchison", pseudocount=1))
+ait_fun <- 1-ait_fun
+ait_fun <- c(as.dist(ait_fun))
+################## plants
+jac_pla <- as.matrix(phyloseq::distance(Diet, method="jaccard", type="samples", binary=T))
+jac_pla[is.na(jac_pla)] <- 0 # defining those as 0 distances
+jac_pla <- 1-jac_pla
+jac_pla <- c(as.dist(jac_pla))
+ait_pla <- as.matrix(vegan::vegdist(Diet@otu_table, method="aitchison", pseudocount=1))
+ait_pla <- 1-ait_pla
+ait_pla <- c(as.dist(ait_pla))
 
-#Combine these vectors into a data frame
-data.dyad<-data.frame(BMI=bmi,Microbiome_similarity=jac,spatial=spa, genetic_dist=gen, locality=loc, HI=HIm, year=tempm, hi=him, sex=sex, MS=chim)
-data.dyad$locality <- as.factor(data.dyad$locality)
-list<-expand.grid(key$ID, key$ID)
-list<-list[which(list$Var1!=list$Var2),]
-list$key <- apply(list, 1, function(x)paste(sort(x), collapse=''))
-list<-subset(list, !duplicated(list$key))
-i=nrow(key)
-JACM[which(rownames(JACM)==list$Var1[i]),which(colnames(JACM)==list$Var2[i])]==jac[i]
-data.dyad$IDA<-list$Var2
-data.dyad$IDB<-list$Var1
-data.dyad<-data.dyad[which(data.dyad$IDA!=data.dyad$IDB),]
-######################### Now we model the data ####################
-data.dyad$sex <- factor(data.dyad$sex, levels=c("MM", "FM", "FF"))
-range.use <- function(x,min.use,max.use){ (x - min(x,na.rm=T))/(max(x,na.rm=T)-min(x,na.rm=T)) * (max.use - min.use) + min.use }
-scalecols<-c("spatial","genetic_dist", "BMI", "year", "hi")
-for(i in 1:ncol(data.dyad[,which(colnames(data.dyad)%in%scalecols)])){
-    data.dyad[,which(colnames(data.dyad)%in%scalecols)][,i]<-range.use(data.dyad[,which(colnames(data.dyad)%in%scalecols)][,i],0,1)
-    }
-#model1_diet<-brm(Microbiome_similarity~1+ spatial+locality+genetic_dist*hi+year+BMI+sex+
-#                (1|mm(IDA,IDB)),
-#                data = data.dyad,
-#                family= "gaussian",
-#                warmup = 1000, iter = 3000,
-#                cores = 20, chains = 4,
-#               inits=0)
-#saveRDS(model1_diet, "tmp/BRMmodel1_diet.rds")
+# adding to big dataset
+data.dyad$jac_bac <- jac_bac
+data.dyad$ait_bac <- ait_bac
+data.dyad$jac_para <- jac_para
+data.dyad$ait_para <- ait_para
+data.dyad$jac_fun <- jac_fun
+data.dyad$ait_fun <- ait_fun
+data.dyad$jac_pla <- jac_pla
+data.dyad$ait_pla <- ait_pla
 
-
-model1_diet_chi<-brm(MS~1+ spatial+locality+genetic_dist*hi+year+BMI+sex+
+#now model
+model1_bac<-brm(jac_bac~1+ spatial+locality+HI*He+year+BMI+sex+
                 (1|mm(IDA,IDB)),
                 data = data.dyad,
                 family= "gaussian",
                 warmup = 1000, iter = 3000,
                 cores = 20, chains = 4,
                inits=0)
-saveRDS(model1_diet_chi, "tmp/BRMmodel1_diet_chi.rds")
+saveRDS(model1_bac, "tmp/BRMmodel1_bac.rds")
+
+model1_bac_ait<-brm(ait_bac~1+ spatial+locality+HI*He+year+BMI+sex+
+                (1|mm(IDA,IDB)),
+                data = data.dyad,
+                family= "gaussian",
+                warmup = 1000, iter = 3000,
+                cores = 20, chains = 4,
+                inits=0)
+saveRDS(model1_bac_ait, "tmp/BRMmodel1_bac_ait.rds")
+
+model1_para<-brm(jac_para~1+ spatial+locality+HI*He+year+BMI+sex+
+                (1|mm(IDA,IDB)),
+                data = data.dyad,
+                family= "gaussian",
+                warmup = 1000, iter = 3000,
+                cores = 20, chains = 4,
+               inits=0)
+saveRDS(model1_para, "tmp/BRMmodel1_para.rds")
+
+model1_para_ait<-brm(ait_para~1+ spatial+locality+HI*He+year+BMI+sex+
+                (1|mm(IDA,IDB)),
+                data = data.dyad,
+                family= "gaussian",
+                warmup = 1000, iter = 3000,
+                cores = 20, chains = 4,
+                inits=0)
+saveRDS(model1_para_ait, "tmp/BRMmodel1_para_ait.rds")
+
+model1_fun<-brm(jac_fun~1+ spatial+locality+HI*He+year+BMI+sex+
+                (1|mm(IDA,IDB)),
+                data = data.dyad,
+                family= "gaussian",
+                warmup = 1000, iter = 3000,
+                cores = 20, chains = 4,
+               inits=0)
+saveRDS(model1_fun, "tmp/BRMmodel1_fun.rds")
+
+model1_fun_ait<-brm(ait_fun~1+ spatial+locality+HI*He+year+BMI+sex+
+                (1|mm(IDA,IDB)),
+                data = data.dyad,
+                family= "gaussian",
+                warmup = 1000, iter = 3000,
+                cores = 20, chains = 4,
+                inits=0)
+saveRDS(model1_fun_ait, "tmp/BRMmodel1_fun_ait.rds")
+
+model1_pla<-brm(jac_pla~1+ spatial+locality+HI*He+year+BMI+sex+
+                (1|mm(IDA,IDB)),
+                data = data.dyad,
+                family= "gaussian",
+                warmup = 1000, iter = 3000,
+                cores = 20, chains = 4,
+               inits=0)
+saveRDS(model1_pla, "tmp/BRMmodel1_pla.rds")
+
+model1_pla_ait<-brm(ait_pla~1+ spatial+locality+HI*He+year+BMI+sex+
+                (1|mm(IDA,IDB)),
+                data = data.dyad,
+                family= "gaussian",
+                warmup = 1000, iter = 3000,
+                cores = 20, chains = 4,
+                inits=0)
+saveRDS(model1_pla_ait, "tmp/BRMmodel1_pla_ait.rds")
 
 
-####### Fungi
-Fungi <- subset_taxa(PS.TSS, Phylum %in% c("Mucoromycota", "Ascomycota", "Basidiomycota"))
-####################
-
-## 1) Jaccard distance
-JACM <- as.matrix(phyloseq::distance(Fungi, method="jaccard", type="samples"))
-# transpose Jaccard disssimilary matrix to Jaccard similarty matrix
-JACM <- 1-JACM
-# sanity check
-all(rownames(JACM)==key)
-dimnames(JACM)<- c(key, key)
-jac<-c(as.dist(JACM))
-## 1) Chisq distance
-CHIM <- as.matrix(vegan::vegdist(Fungi@otu_table, method="chisq"))
-# transpose Chi square disssimilary matrix to similarty matrix
-CHIM <- 1-CHIM
-# sanity check
-all(rownames(CHIM)==key)
-dimnames(CHIM)<- c(key, key)
-chi<-c(as.dist(CHIM))
-
-#Combine these vectors into a data frame
-data.dyad<-data.frame(BMI=bmi,Microbiome_similarity=jac,spatial=spa, genetic_dist=gen, locality=loc, HI=HIm, year=tempm, hi=him, sex=sex, MS=chi)
-
-data.dyad$locality <- as.factor(data.dyad$locality)
-list<-expand.grid(key$ID, key$ID)
-list<-list[which(list$Var1!=list$Var2),]
-list$key <- apply(list, 1, function(x)paste(sort(x), collapse=''))
-list<-subset(list, !duplicated(list$key))
-i=nrow(key)
-JACM[which(rownames(JACM)==list$Var1[i]),which(colnames(JACM)==list$Var2[i])]==jac[i]
-data.dyad$IDA<-list$Var2
-data.dyad$IDB<-list$Var1
-data.dyad<-data.dyad[which(data.dyad$IDA!=data.dyad$IDB),]
-######################### Now we model the data ####################
-data.dyad$sex <- factor(data.dyad$sex, levels=c("MM", "FM", "FF"))
-range.use <- function(x,min.use,max.use){ (x - min(x,na.rm=T))/(max(x,na.rm=T)-min(x,na.rm=T)) * (max.use - min.use) + min.use }
-scalecols<-c("spatial","genetic_dist", "BMI", "year", "hi")
-for(i in 1:ncol(data.dyad[,which(colnames(data.dyad)%in%scalecols)])){
-    data.dyad[,which(colnames(data.dyad)%in%scalecols)][,i]<-range.use(data.dyad[,which(colnames(data.dyad)%in%scalecols)][,i],0,1)
-}
-
-saveRDS(data.dyad, "tmp/Fungi_data.dyad.RDS")
-
-#model1_Fungi<-brm(Microbiome_similarity~1+ spatial+locality+genetic_dist*hi+year+BMI+sex+
-#                (1|mm(IDA,IDB)),
-#                data = data.dyad,
-#                family= "gaussian",
-#                warmup = 1000, iter = 3000,
-#                cores = 20, chains = 4,
-#               inits=0)
-#saveRDS(model1_Fungi, "tmp/BRMmodel1_Fungi.rds")
-
-#model1_Fungi_chi<-brm(MS~1+ spatial+locality+genetic_dist*hi+year+BMI+sex+
-#                (1|mm(IDA,IDB)),
-#                data = data.dyad,
-#                family= "gaussian",
-#                warmup = 1000, iter = 3000,
-#                cores = 20, chains = 4,
-#               inits=0)
-#saveRDS(model1_Fungi_chi, "tmp/BRMmodel1_Fungi_chi.rds")
-
-model1_Fungi_chi <- readRDS("tmp/BRMmodel1_Fungi_chi.rds")
-
-model1_Fungi_chi
-
-model1_Fungi
-}
-
+#################################
 ### uploading models
 model1 <- readRDS("tmp/BRMmodel1.rds")
-
 model1_chi <- readRDS("tmp/BRMmodel1_chi.rds")
 
 model1_para <- readRDS("tmp/BRMmodel1_para.rds")
@@ -627,9 +282,155 @@ re.plot2 <- ggplot(res, aes(x = Estimate, y = Effect, fill = Effect)) +
 
 re.plot2
 
-Fig3 <- plot_grid(re.plot, re.plot2, labels="auto")
 
-ggsave("fig/figure3.pdf", Fig3, width=200, height=180, units="mm", dpi=300)
+resdf.fun<- function(model1_para, name, ASV){
+    para <- summary(model1_para)$fixed
+    data.frame(Domain=name,
+               ASVs=ASV,
+               genetic_dist_Estimate=para[rownames(para)=="genetic_dist", "Estimate"],
+               genetic_dist_lCI=para[rownames(para)=="genetic_dist", "l-95% CI"],
+               genetic_dist_uCI=para[rownames(para)=="genetic_dist", "u-95% CI"],
+               spatial_Estimate=para$Estimate[rownames(para)=="spatial"],
+               spatial_lCI=para[rownames(para)=="spatial", "l-95% CI"],
+               spatial_uCI=para[rownames(para)=="spatial", "u-95% CI"],
+               locality_Estimate=para$Estimate[rownames(para)=="locality1"],
+               locality_lCI=para[rownames(para)=="locality1", "l-95% CI"],
+               locality_uCI=para[rownames(para)=="locality1", "u-95% CI"],
+               hi_Estimate=para$Estimate[rownames(para)=="hi"],
+               hi_lCI=para[rownames(para)=="hi", "l-95% CI"],
+               hi_uCI=para[rownames(para)=="hi", "u-95% CI"],
+               year_Estimate=para$Estimate[rownames(para)=="year"],
+               year_lCI=para[rownames(para)=="year", "l-95% CI"],
+               year_uCI=para[rownames(para)=="year", "u-95% CI"],
+               BMI_Estimate=para$Estimate[rownames(para)=="BMI"],
+               BMI_lCI=para[rownames(para)=="BMI", "l-95% CI"],
+               BMI_uCI=para[rownames(para)=="BMI", "u-95% CI"],
+               sexFM_Estimate=para$Estimate[rownames(para)=="sexFM"],
+               sexFM_lCI=para[rownames(para)=="sexFM", "l-95% CI"],
+               sexFM_uCI=para[rownames(para)=="sexFM", "u-95% CI"],
+               sexFF_Estimate=para$Estimate[rownames(para)=="sexFF"],
+               sexFF_lCI=para[rownames(para)=="sexFF", "l-95% CI"],
+               sexFF_uCI=para[rownames(para)=="sexFF", "u-95% CI"],
+               gen_hi_Estimate=para$Estimate[rownames(para)=="genetic_dist:hi"],
+               gen_hi_lCI=para[rownames(para)=="genetic_dist:hi", "l-95% CI"],
+               gen_hi_uCI=para[rownames(para)=="genetic_dist:hi", "u-95% CI"]
+               )
+}
+
+res.df <-resdf.fun(model1_para, "Parasite", 11)
+res.df <- rbind(res.df, resdf.fun(model1_bac, "Bacteria", 383))
+res.df <- rbind(res.df, resdf.fun(model1_diet, "Diet", 45))
+res.df <- rbind(res.df, resdf.fun(model1_Fungi, "Fungi", 65))
+res.df <- rbind(res.df, resdf.fun(model1, "Full model", 588))
+res.df$Domain <- factor(res.df$Domain, level=c("Bacteria", "Diet", "Parasite", "Fungi", "Full model"))
+
+res.dfC <-resdf.fun(model1_para_chi, "Parasite", 11)
+res.dfC <- rbind(res.dfC, resdf.fun(model1_bac_chi, "Bacteria", 383))
+res.dfC <- rbind(res.dfC, resdf.fun(model1_diet_chi, "Diet", 45))
+res.dfC <- rbind(res.dfC, resdf.fun(model1_Fungi_chi, "Fungi", 65))
+res.dfC <- rbind(res.dfC, resdf.fun(model1_chi, "Full model", 588))
+res.dfC$Domain <- factor(res.dfC$Domain, level=c("Bacteria", "Diet", "Parasite", "Fungi", "Full model"))
+
+coul <- c("#136f63", "#032b43", "#3f88c5", "#ffba08", "#d00000")
+
+genJ <- ggplot(res.df, aes(x=genetic_dist_Estimate, y=Domain, colour=Domain))+
+    geom_errorbar(aes(xmin=genetic_dist_lCI, xmax=genetic_dist_uCI, colour=Domain),
+                  size=1, width=0.4)+
+    geom_point(size=3)+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=1.5)+
+    scale_x_reverse()+
+   scale_colour_manual(values=coul)+
+#    scale_discrete_vi()+
+    labs(x="Genetic distance estimate", y="")+
+    theme_classic(base_size=12)+
+    theme(legend.position = "none")
+
+genC <- ggplot(res.dfC, aes(x=genetic_dist_Estimate, y=Domain, colour=Domain))+
+    geom_errorbar(aes(xmin=genetic_dist_lCI, xmax=genetic_dist_uCI, colour=Domain),
+                  size=1, width=0.4)+
+    geom_point(size=3)+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=1.5)+
+    scale_x_reverse()+
+   scale_colour_manual(values=coul)+
+#    scale_discrete_vi()+
+    labs(x="Genetic distance estimate", y="")+
+    theme_classic(base_size=12)+
+    theme(legend.position = "none")
+
+hiJ <- ggplot(res.df, aes(x=hi_Estimate, y=Domain, colour=Domain))+
+    geom_errorbar(aes(xmin=hi_lCI, xmax=hi_uCI, colour=Domain),
+                  size=1, width=0.4)+
+    geom_point(size=3)+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=1.5)+
+#    scale_x_reverse()+
+   scale_colour_manual(values=coul)+
+#    scale_discrete_vi()+
+    labs(x="Hybridicity distance estimate", y="")+
+    theme_classic(base_size=12)+
+    theme(legend.position = "none")
+
+hiC <- ggplot(res.dfC, aes(x=hi_Estimate, y=Domain, colour=Domain))+
+    geom_errorbar(aes(xmin=hi_lCI, xmax=hi_uCI, colour=Domain),
+                  size=1, width=0.4)+
+    geom_point(size=3)+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=1.5)+
+#    scale_x_reverse()+
+   scale_colour_manual(values=coul)+
+#    scale_discrete_vi()+
+    labs(x="Hybridicity distance estimate", y="")+
+    theme_classic(base_size=12)+
+    theme(legend.position = "none")
+hiC
+
+spaJ <- ggplot(res.df, aes(x=spatial_Estimate, y=Domain, colour=Domain))+
+    geom_errorbar(aes(xmin=spatial_lCI, xmax=spatial_uCI, colour=Domain),
+                  size=1, width=0.4)+
+    geom_point(size=3)+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=1.5)+
+#    scale_x_reverse()+
+   scale_colour_manual(values=coul)+
+#    scale_discrete_vi()+
+    labs(x="Spatial distance estimate", y="")+
+    theme_classic(base_size=12)+
+    theme(legend.position = "none")
+spaC <- ggplot(res.dfC, aes(x=spatial_Estimate, y=Domain, colour=Domain))+
+    geom_errorbar(aes(xmin=spatial_lCI, xmax=spatial_uCI, colour=Domain),
+                  size=1, width=0.4)+
+    geom_point(size=3)+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=1.5)+
+#    scale_x_reverse()+
+   scale_colour_manual(values=coul)+
+#    scale_discrete_vi()+
+    labs(x="Spatial distance estimate", y="")+
+    theme_classic(base_size=12)+
+    theme(legend.position = "none")
+loJ <- ggplot(res.df, aes(x=locality_Estimate, y=Domain, colour=Domain))+
+    geom_errorbar(aes(xmin=locality_lCI, xmax=locality_uCI, colour=Domain),
+                  size=1, width=0.4)+
+    geom_point(size=3)+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=1.5)+
+#    scale_x_reverse()+
+   scale_colour_manual(values=coul)+
+#    scale_discrete_vi()+
+    labs(x="Shared locality estimate", y="")+
+    theme_classic(base_size=12)+
+    theme(legend.position = "none")
+loC <- ggplot(res.dfC, aes(x=locality_Estimate, y=Domain, colour=Domain))+
+    geom_errorbar(aes(xmin=locality_lCI, xmax=locality_uCI, colour=Domain),
+                  size=1, width=0.4)+
+    geom_point(size=3)+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=1.5)+
+#    scale_x_reverse()+
+   scale_colour_manual(values=coul)+
+#    scale_discrete_vi()+
+    labs(x="Shared locality estimate", y="")+
+    theme_classic(base_size=12)+
+    theme(legend.position = "none")
+
+
+
+Fig2 <- plot_grid(genJ, genC, hiJ, hiC, spaJ, spaJ, loJ, loC, labels="auto", ncol=2)
+ggsave("fig/figure2.pdf", Fig2, width=170, height=200, units="mm", dpi=300)
 
 
 ############## ending analysis here for now ##################
@@ -920,3 +721,123 @@ Fig4
 
 
 ggplot2::ggsave(file="fig/Fig4.pdf", Fig4, width = 230, height = 180, dpi = 300, units="mm")
+
+## Let's model
+newdata0 <- data.frame(hi=seq_range(data.dyad$hi, n=51),
+                      BMI=rep(median(data.dyad$BMI), n=51),
+                      year=rep(0, n=51),
+                      genetic_dist=rep(0, n=51),
+#             hi=rep(median(data.dyad$hi), n=51),
+                      locality=rep(0, n=51),
+                      sex=rep("MM", 51),
+                      IDA=rep("AA_0197", 51),
+                      IDB=rep("AA_0089", 51),
+                      spatial=rep(median(data.dyad$spatial)))
+newdata1 <- data.frame(hi=seq_range(data.dyad$hi, n=51),
+                      BMI=rep(median(data.dyad$BMI), n=51),
+                      year=rep(0, n=51),
+                      genetic_dist=rep(1, n=51),
+#             hi=rep(median(data.dyad$hi), n=51),
+                      locality=rep(0, n=51),
+                      sex=rep("MM", 51),
+                      IDA=rep("AA_0197", 51),
+                      IDB=rep("AA_0089", 51),
+                      spatial=rep(median(data.dyad$spatial)))
+newdata05 <- data.frame(hi=seq_range(data.dyad$hi, n=51),
+                      BMI=rep(median(data.dyad$BMI), n=51),
+                      year=rep(0, n=51),
+                      genetic_dist=rep(0.5, n=51),
+#             hi=rep(median(data.dyad$hi), n=51),
+                      locality=rep(0, n=51),
+                      sex=rep("MM", 51),
+                      IDA=rep("AA_0197", 51),
+                      IDB=rep("AA_0089", 51),
+                      spatial=rep(median(data.dyad$spatial)))
+
+bac.df0 <- add_epred_draws(newdata0, model1_bac_chi)
+
+bac0 <- ggplot(bac.df0, aes(x=hi, y=.epred))+
+    stat_lineribbon(.width=c(0.5, 0.8, 0.95), colour="#136f63", fill="#136f63", alpha=0.5)+
+    labs(title="Genetic distance = 0", x="Hybridicity distance", y="Predicted bacterial composition (Jaccard similarity)")+
+    theme_classic(base_size=10)+
+    theme(plot.title = element_text(hjust = 0.5, size = 12, face = "bold"),
+               axis.title.x = element_text(size = 12),
+               axis.title.y = element_text(size = 12),
+               axis.text.x = element_text(size = 10),
+               axis.text.y = element_text(size = 10),
+               legend.position = "none")
+
+
+bac0
+
+bac.df1 <- add_epred_draws(newdata1, model1_bac_chi)
+bac1 <- ggplot(bac.df1, aes(x=hi, y=.epred))+
+    stat_lineribbon(.width=c(0.95), alpha=0.5)+
+    labs(title="genetic distance = 1")+
+    theme_classic()
+
+bac.df05 <- add_epred_draws(newdata05, model1_bac_chi)
+bac05 <- ggplot(bac.df05, aes(x=hi, y=.epred))+
+    stat_lineribbon(.width=c(0.95), alpha=0.5)+
+        labs(title="genetic distance = 0.5")+
+    theme_classic()
+
+plot_grid(bac0, bac05, bac1, nrow=1)
+
+
+newdata0 <- data.frame(hi=seq_range(data.dyad$hi, n=51),
+                      BMI=rep(median(data.dyad$BMI), n=51),
+                      year=rep(0, n=51),
+                      genetic_dist=rep(0, n=51),
+#             hi=rep(median(data.dyad$hi), n=51),
+                      locality=rep(0, n=51),
+                      sex=rep("MM", 51),
+                      IDA=rep("AA_0197", 51),
+                      IDB=rep("AA_0089", 51),
+                      spatial=rep(median(data.dyad$spatial)))
+pred.df0 <- add_epred_draws(newdata0, model1_Fungi)
+
+fun0 <- ggplot(pred.df0, aes(x=hi, y=.epred))+
+    stat_lineribbon(.width=c(0.95), alpha=0.5)+
+        labs(title="genetic distance = 0")+
+    theme_classic()
+
+newdata1 <- data.frame(hi=seq_range(data.dyad$hi, n=51),
+                      BMI=rep(median(data.dyad$BMI), n=51),
+                      year=rep(0, n=51),
+                      genetic_dist=rep(1, n=51),
+#             hi=rep(median(data.dyad$hi), n=51),
+                      locality=rep(0, n=51),
+                      sex=rep("MM", 51),
+                      IDA=rep("AA_0197", 51),
+                      IDB=rep("AA_0089", 51),
+                      spatial=rep(median(data.dyad$spatial)))
+pred.df1 <- add_epred_draws(newdata1, model1_Fungi)
+fun1 <- ggplot(pred.df1, aes(x=hi, y=.epred))+
+    stat_lineribbon(.width=c(0.95), alpha=0.5, colour="#ffba08")+
+    labs(title="genetic distance = 1")+
+    theme_classic()
+
+
+newdata05 <- data.frame(hi=seq_range(data.dyad$hi, n=51),
+                      BMI=rep(median(data.dyad$BMI), n=51),
+                      year=rep(0, n=51),
+                      genetic_dist=rep(0.5, n=51),
+#             hi=rep(median(data.dyad$hi), n=51),
+                      locality=rep(0, n=51),
+                      sex=rep("MM", 51),
+                      IDA=rep("AA_0197", 51),
+                      IDB=rep("AA_0089", 51),
+                      spatial=rep(median(data.dyad$spatial)))
+pred.df05 <- add_epred_draws(newdata05, model1_Fungi)
+fun05 <- ggplot(pred.df05, aes(x=hi, y=.epred))+
+    stat_lineribbon(.width=c(0.95), alpha=0.5)+
+        labs(title="genetic distance = 0.5")+
+    theme_classic()
+
+
+plot_grid(bac0, bac05, bac1, nrow=1)
+
+plot_grid(fun0, fun05, fun1, nrow=1)
+
+gen_pred0

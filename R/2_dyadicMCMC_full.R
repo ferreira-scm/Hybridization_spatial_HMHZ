@@ -62,48 +62,33 @@ key <- data.frame(ID=sample_data(PS.TSS)$Mouse_ID)
 metadt <- sample_data(PS.TSS)
 ####################
 
+metadt$He <- 2*(metadt$HI)*(1-metadt$HI)
+
 doData <- FALSE
 
 if(doData){
 ## 1) Jaccard distance for microbiome
-JACM <- as.matrix(phyloseq::distance(PS.TSS, method="jaccard", type="samples"))
+JACM <- as.matrix(phyloseq::distance(PS.TSS, method="jaccard", type="samples", binary=T))
 # transpose Jaccard disssimilary matrix to Jaccard similarty matrix
 JACM <- 1-JACM
 # sanity check
 all(rownames(JACM)==key)
-dimnames(JACM)<- c(key, key)
+jac <- c(as.dist(JACM))
 ## 2) Spatial distance matrix
-distance.df <- metadt[,c("Mouse_ID", "Longitude", "Latitude")]
-SPATM <- array(NA, c(length(distance.df$Mouse_ID),length(distance.df$Mouse_ID)))
-# derive matrix with spatial distances between each location
-for (i in 1:length(distance.df$Mouse_ID)){
-    for (j in 1:length(distance.df$Mouse_ID))
-    {SPATM[i,j]= sqrt((abs(distance.df$Longitude[i]-distance.df$Longitude[j]))^2+
-                      (abs(distance.df$Latitude[i]-distance.df$Latitude[j]))^2)
-    }
-}
-dimnames(SPATM)<- c(key, key)
+distance.df <- metadt[,c("Longitude", "Latitude")]
+spa <- c(dist(distance.df, method="euclidean"))
 ## 3) Chisq distance for microbiome
 CHIM <- as.matrix(vegan::vegdist(PS.TSS@otu_table, method="chisq"))
 # transpose Chi square disssimilary matrix to similarty matrix
 CHIM <- 1-CHIM
 # sanity check
 all(rownames(CHIM)==key)
-dimnames(CHIM)<- c(key, key)
-# 4) pairwise genetic distance based on genetic data
-# I actually need to get this from sota again
-sota <- read.csv("https://raw.githubusercontent.com/derele/Mouse_Eimeria_Field/master/data_products/SOTA_Data_Product.csv")
-gen <- c("mtBamH", "YNPAR", "X332", "X347", "X65", "Tsx", "Btk", "Syap1",
-         "Es1","Gpd1","Idh1","Mpi","Np", "Sod1", "Es1C", "Gpd1C", "Idh1C",
-         "MpiC","NpC", "Sod1C")
-sota <- sota[sota$Mouse_ID%in%distance.df$Mouse_ID,c("Mouse_ID", gen)]
-sota <- sota[match(distance.df$Mouse_ID, sota$Mouse_ID),]
-all(sota$Mouse_ID==distance.df$Mouse_ID)
-rownames(sota) <- sota$Mouse_ID
-sota$Mouse_ID <- NULL
-gen.dis <- dist.gene(sota, method = "pairwise", pairwise.deletion = TRUE)
-gen.dis <- as.matrix(gen.dis)
-dimnames(gen.dis) <- c(key, key)
+chi <- c(as.dist(CHIM))
+## 4) Aitchison distance for microbiome
+AIM <- as.matrix(vegan::vegdist(PS.TSS@otu_table, method="aitchison", pseudocount=1))
+# transpose Aitchison disssimilary matrix to similarty matrix
+AIM <- 1-AIM
+ait <- c(as.dist(AIM))
 ## 5) Sex pairs
 Sex_frame<-metadt[,c("Mouse_ID","Sex")]
 Sex_frame$Mouse_ID<-as.character(Sex_frame$Mouse_ID)
@@ -119,16 +104,9 @@ for(i in 1:nrow(Sex_frame)){
             SEXM[i,j]= "FM"}
     }
 }
-dimnames(SEXM)<-c(key, key)
+sex<-c(SEXM[lower.tri(SEXM)])
 # 6) Making BMI distances
-BMI_frame<-metadt[,c("Mouse_ID", "BMI")]
-BMIM<-array(0,c(nrow(BMI_frame),nrow(BMI_frame)))
-for (i in 1:nrow(BMI_frame)){
-    for (j in 1:nrow(BMI_frame))
-    {BMIM[i,j]=abs(BMI_frame$BMI[i] -BMI_frame$BMI[j])
-    }
-}
-dimnames(BMIM) <- c(key, key)
+bmi <- c(dist(metadt$BMI))
 # 7) Create farm/Locality matrix: 
 Loc_frame<-metadt[,c("Mouse_ID","Locality")]
 LocM<-array(0,c(nrow(Loc_frame),nrow(Loc_frame)))
@@ -142,66 +120,19 @@ for(i in 1:nrow(Loc_frame)){
     }
 }
 all(rownames(LocM)==key$ID)
-dimnames(LocM) <- c(key, key)
+loc <- as.character(c(as.dist(LocM)))
 # 8) this matrix will describe the distance in years between samples
 #Transform dates into a numeric variable
 metadt$Year <- as.numeric(metadt$Year)
-SampleTime_frame<-metadt[,c("Mouse_ID","Year")]
-TEMPM<-array(0,c(nrow(SampleTime_frame),nrow(SampleTime_frame)))
-for (i in 1:nrow(SampleTime_frame)){
- for (j in 1:nrow(SampleTime_frame))
-{TEMPM[i,j]=abs(SampleTime_frame$Year[i] -SampleTime_frame$Year[j])
-  }
-}
-dimnames(TEMPM)<-c(key,key)
+tempm <- c(dist(metadt$Year))
 # 9) Making HI distances
-HI_frame<-metadt[,c("Mouse_ID", "HI")]
-HIM<-array(0,c(nrow(HI_frame),nrow(HI_frame)))
-for (i in 1:nrow(HI_frame)){
-    for (j in 1:nrow(HI_frame))
-    {HIM[i,j]=abs(HI_frame$HI[i] -HI_frame$HI[j])
-    }
-}
-dimnames(HIM) <- c(key, key)
-# 10) Making hybridicity distances
-hi_frame<-metadt[,c("Mouse_ID", "hi")]
-hiM<-array(0,c(nrow(hi_frame),nrow(hi_frame)))
-for (i in 1:nrow(hi_frame)){
-    for (j in 1:nrow(hi_frame))
-    {hiM[i,j]=abs(hi_frame$hi[i] -hi_frame$hi[j])
-    }
-}
-dimnames(hiM) <- c(key, key)
-# here are our matrices
-str(CHIM)
-str(BMIM)
-str(SPATM)
-str(JACM)
-str(gen.dis)
-str(SEXM)
-str(LocM)
-str(HIM)
-str(hiM)
-str(TEMPM)
-    
-#First unravel the matrices into vectors matching the lower quantile of each matrix.
-#From numeric matrices, this can be done by making a list (c()) of the distance object (dist()) derived from the matrix. as.dist() by default includes only the lower quantile of the matrix and excludes the diagonal.
-#From categorical matrices, this can be done by making a list (c()) of the lower quantile of the matrix with lower.tri() -function.
-chi <- c(as.dist(CHIM))
-jac<-c(as.dist(JACM))
-bmi<-c(as.dist(BMIM))
-spa<-c(as.dist(SPATM))
-gen<-c(as.dist(gen.dis))
-sex<-c(SEXM[lower.tri(SEXM)])
-loc <- as.character(c(as.dist(LocM)))
-HIm <- c(as.dist(HIM))
-him <- c(as.dist(hiM))
-tempm <- c(as.dist(TEMPM))
+HIM <- c(dist(metadt$HI))
+#10) Making HE distances
+HeM <- c(dist(metadt$He))
+
 #Combine these vectors into a data frame
-data.dyad<-data.frame(BMI=bmi,Microbiome_similarity=jac,spatial=spa, genetic_dist=gen, locality=loc, HI=HIm, year=tempm, hi=him, sex=sex, Microbiome_similarity_chi=chi)
-
+data.dyad<-data.frame(BMI=bmi,Microbiome_similarity=jac,spatial=spa, locality=loc, HI=HIM, He=HeM, year=tempm, sex=sex, Microbiome_similarity_chi=chi, Microbiome_similarity_ai=ait)
 data.dyad$locality <- as.factor(data.dyad$locality)
-
 #Now all we need to do is add the identities of both individuals in each dyad as separate columns into the data frame and exclude self-comparisons (as these are not meaningful).
 # extracting Individual-combinations present in the matrices
 list<-expand.grid(key$ID, key$ID)
@@ -222,8 +153,8 @@ data.dyad<-data.dyad[which(data.dyad$IDA!=data.dyad$IDB),]
 data.dyad$sex <- factor(data.dyad$sex, levels=c("MM", "FM", "FF"))
 #scale all predictors to range between 0-1 if they are not already naturally on that scale
 #define scaling function:
-range.use <- function(x,min.use,max.use){ (x - min(x,na.rm=T))/(max(x,na.rm=T)-min(x,na.rm=T)) * (max.use - min.use) + min.use }
-scalecols<-c("spatial","genetic_dist", "BMI", "year", "hi")
+    range.use <- function(x,min.use,max.use){ (x - min(x,na.rm=T))/(max(x,na.rm=T)-min(x,na.rm=T)) * (max.use - min.use) + min.use }
+scalecols<-c("spatial","He", "BMI", "year")
 for(i in 1:ncol(data.dyad[,which(colnames(data.dyad)%in%scalecols)])){
     data.dyad[,which(colnames(data.dyad)%in%scalecols)][,i]<-range.use(data.dyad[,which(colnames(data.dyad)%in%scalecols)][,i],0,1)
     }
@@ -233,10 +164,6 @@ saveRDS(data.dyad, "tmp/data.dyad.RDS")
 data.dyad <- readRDS("tmp/data.dyad.RDS")
 
 ######################### Now we model the data ####################
-## now let's take a look at correlation trends
-cor.test(data.dyad$genetic_dist, data.dyad$hi, method="spearman")
-cor.test(data.dyad$genetic_dist, data.dyad$HI)
-
 ## map
 # plotting geographic location
 capital <-world.cities[c(world.cities$capital==1),]
@@ -256,198 +183,83 @@ library("ggspatial")
 sampling <-
     ggplot(data=europe)+
   geom_sf(data = boundaries, fill = NA, color = "black")+
-  geom_point(data=metadf,aes(x=Longitude, y=Latitude, fill=HI), size=1.5, alpha=0.5, shape=21, colour="white")+
-    coord_sf(xlim=c(6, 16), ylim=c(47, 55), expand=FALSE)+
+  geom_point(data=metadf,aes(x=Longitude, y=Latitude, fill=HI), size=2, alpha=0.5, shape=21, colour="white")+
+    coord_sf(xlim=c(6, 16), ylim=c(47, 56), expand=FALSE)+
  #   geom_point(shape=4, data=capital, aes(x=long, y=lat), size=2, col="black")+
     scale_fill_scico("Hybrid index", palette="roma", direction=-1)+
-    scale_bar(lon = 6.5, lat = 54.5, arrow_length = 10, arrow_distance = 50,
+    scale_bar(lon = 6.5, lat = 55.5, arrow_length = 10, arrow_distance = 50,
                  distance_lon = 50, distance_lat = 7, distance_legend = 20,
                  dist_unit = "km", orientation = FALSE, legend_size = 2)+
     theme_bw(base_size=10)+
     theme(panel.border = element_blank(), panel.grid.major = element_blank(),
-            panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))+
+          panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
+          legend.position="top")+
   ggspatial::annotation_north_arrow(location = "tr")
+sampling
 
-gen_HI <- ggplot(data = data.dyad, aes(x= genetic_dist, y= HI))+
-    geom_bin2d(bins=20)+
+
+hi_HI_dist <-ggplot(data = data.dyad, aes(x= HI, y= He))+
+    geom_bin2d(bins=30)+
         scale_fill_scico(palette="bamako", direction=-1)+
-    stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")),
-                       parse = TRUE, size=2) +
-        stat_poly_line(method="lm", color="firebrick", size=1)+
-    ylab("Genetic distance")+
-    xlab("Hybrid index distance")+
-    theme_bw(base_size=10)+
-    xlim(0,1)+
-    ylim(0,1)+
-    theme_classic(base_size=10)+
-    theme(axis.title.x = element_text(vjust = 0, size = 10),
-          axis.title.y = element_text(vjust = 2, size = 10),
-          legend.position="bottom")
-
-hi_gen <-ggplot(data = data.dyad, aes(x= genetic_dist, y= hi))+
-    geom_bin2d(bins=20)+
-    scale_fill_scico(palette="bamako", direction=-1)+
-    stat_poly_line(method="lm",formula=y~x+I(x^2),  color="firebrick", size=1)+
-    stat_poly_eq(formula=y~x+I(x^2), aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")),
-                       parse = TRUE, size=2) +
-    ylab("Hybridicity distance")+
-    xlab("Genetic distance")+
-    theme_classic(base_size=10)+
-    theme_bw(base_size=10)+
-    theme(axis.title.x = element_text(vjust = 0, size = 10),
-          axis.title.y = element_text(vjust = 2, size = 10),
-          legend.position="bottom")
-
-hi_HI <-ggplot(data = data.dyad, aes(x= HI, y= hi))+
-    geom_bin2d(bins=20)+
-        scale_fill_scico(palette="bamako", direction=-1)+
-    stat_poly_line(method="lm",formula=y~x+I(x^2),  color="firebrick", size=1)+
-    stat_poly_eq(formula=y~x+I(x^2), aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")),
-               parse = TRUE, size=2) +
-    ylab("Hybridicity distance")+
+#    stat_poly_line(method="lm",formula=y~x+I(x^2),  color="firebrick", size=1)+
+#    stat_poly_eq(formula=y~x+I(x^2), aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")),
+#               parse = TRUE, size=2) +
+    ylab("Expected heterozygousity distance")+
     xlab("Hybrid index distance")+
     theme_classic(base_size=10)+
     theme(axis.title.x = element_text(vjust = 0, size = 10),
           axis.title.y = element_text(vjust = 2, size = 10),
           legend.position="bottom")
 
-hi_Hindex <-ggplot(data = metadt, aes(x= HI, y= hi))+
-    geom_bin2d(bins=50)+
+hi_HI <-ggplot(data = metadt, aes(x= HI, y= He))+
+    geom_bin2d(bins=40)+
         scale_fill_scico(palette="bamako", direction=-1)+
-    ylab("Hybridicity")+
+    ylab("Expected heterozygousity")+
     xlab("Hybrid index")+
     theme_classic(base_size=10)+
     theme(axis.title.x = element_text(vjust = 0, size = 10),
-                    axis.title.y = element_text(vjust = 2, size = 10))
+          axis.title.y = element_text(vjust = 2, size = 10),
+          legend.position="bottom")
 
+bc <- plot_grid(hi_HI, hi_HI_dist, labels=c("b", "c"), ncol=1)
+Fig1 <- plot_grid(sampling, bc, ncol=2, labels=c("a", ""))
+ggsave("fig/Figure1.pdf", Fig1, width=170, height=190, units="mm", dpi=300)
 
 ## Let's model
-#model1<-brm(Microbiome_similarity~1+ spatial+locality+genetic_dist*hi+year+BMI+sex+
-#                (1|mm(IDA,IDB)),
-#                data = data.dyad,
-#                family= "gaussian",
-#                warmup = 1000, iter = 3000,
-#                cores = 20, chains = 4,
- #               inits=0)
-#model1 <- add_criterion(model1, "loo")
-#saveRDS(model1, "tmp/BRMmodel1.rds")
-
-model1 <- readRDS("tmp/BRMmodel1.rds")
-
-model1_HI <- readRDS("tmp/BRMmodel1_HI.rds")
-
-
-#model1_HI<-brm(Microbiome_similarity~1+ spatial+locality+HI*hi+year+BMI+sex+
-#                (1|mm(IDA,IDB)),
-#                data = data.dyad,
-#                family= "gaussian",
-#                warmup = 1000, iter = 3000,
-#                cores = 20, chains = 4,
-#                inits=0)
-#model1_HI <- add_criterion(model1_HI, "loo")
-#saveRDS(model1_HI, "tmp/BRMmodel1_HI.rds")
-model1_HI <- readRDS("tmp/BRMmodel1_HI.rds")
-
-print(model1_HI, digits=3)
-print(model1, digits=3)
-
-
-#model1_chi<-brm(Microbiome_similarity_chi~1+ spatial+locality+genetic_dist*hi+year+BMI+sex+
+#model1<-brm(Microbiome_similarity~1+ spatial+locality+HI*He+year+BMI+sex+
 #                (1|mm(IDA,IDB)),
 #                data = data.dyad,
 #                family= "gaussian",
 #                warmup = 1000, iter = 3000,
 #                cores = 20, chains = 4,
 #               inits=0)
-#model1_chi <- add_criterion(model1_chi, "loo")
-#saveRDS(model1_chi, "tmp/BRMmodel1_chi.rds")
-model1_chi <- readRDS("tmp/BRMmodel1_chi.rds")
+#model1 <- add_criterion(model1, "loo")
+#saveRDS(model1, "tmp/BRMmodel1.rds")
+model1 <- readRDS("tmp/BRMmodel1.rds")
 
-model1_HI_chi<-brm(Microbiome_similarity_chi~1+ spatial+locality+HI*hi+year+BMI+sex+
-                (1|mm(IDA,IDB)),
-                data = data.dyad,
-                family= "gaussian",
-                warmup = 1000, iter = 3000,
-                cores = 40, chains = 4,
-                inits=0)
-model1_HI_chi <- add_criterion(model1_HI_chi, "loo")
-saveRDS(model1_HI_chi, "tmp/BRMmodel1_HI_chi.rds")
-model1_HI_chi <- readRDS("tmp/BRMmodel1_HI_chi.rds")
+#model1_ai<-brm(Microbiome_similarity_ai~1+ spatial+locality+HI*He+year+BMI+sex+
+#                (1|mm(IDA,IDB)),
+#                data = data.dyad,
+#                family= "gaussian",
+#                warmup = 1000, iter = 3000,
+#                cores = 20, chains = 4,
+#               inits=0)
+#model1_ai <- add_criterion(model1_ai, "loo")
+#saveRDS(model1_ai, "tmp/BRMmodel1_ai.rds")
+model1_ai <- readRDS("tmp/BRMmodel1_ai.rds")
 
-loo_compare(model1, model1_HI)
-loo_compare(model1_chi, model1_HI_chi)
-
-loo(model1_chi, save_psis = TRUE)
 loo(model1)
 
 
-gd <- conditional_effects(model1, "genetic_dist", ask=FALSE)
-gd <- as.data.frame(gd$genetic_dist)
-hi <- conditional_effects(model1_HI, "HI", ask=FALSE)
-hi <- as.data.frame(hi$HI)
-
-hi$HI
-
-f <- ggplot(hi, aes(x=HI, y=estimate__))+
-    geom_line(data=gd, aes(y=estimate__, x=genetic_dist), size=1, colour="#00008B")+
-    geom_ribbon(data=gd, aes(ymin=lower__, ymax=upper__, x=genetic_dist), fill="#00008B", alpha=0.2)+
-        geom_ribbon(aes(ymin=lower__, ymax=upper__), fill="#7A2048", alpha=0.2)+
-        geom_line(size=1, colour="#7A2048")+
-    scale_x_continuous(limits=c(0,1), expand=c(0,0))+
-#    scale_y_continuous(limits=c(0,0.3), expand=c(0,0))+
-    xlab("distances")+
-    ylab("Jaccard similarity distance estimate")+
-    theme_classic(base_size=10)+
-    theme(axis.title.x = element_text(vjust = 0, size = 10),
-          axis.title.y = element_text(vjust = 2, size = 10))
-
-
-
-gd2 <- conditional_effects(model1_chi, "genetic_dist", ask=FALSE)
-gd2 <- as.data.frame(gd2$genetic_dist)
-
-hi2 <- conditional_effects(model1_HI_chi, "HI", ask=FALSE)
-hi2 <- as.data.frame(hi2$HI)
-
-
-
-g <- ggplot(hi2, aes(x=HI, y=estimate__))+
-    geom_line(data=gd2, aes(y=estimate__, x=genetic_dist), size=1, colour="#00008B")+
-    geom_ribbon(data=gd2, aes(ymin=lower__, ymax=upper__, x=genetic_dist), fill="#00008B", alpha=0.2)+
-        geom_line(size=1, colour="#7A2048")+
-    geom_ribbon(aes(ymin=lower__, ymax=upper__), fill="#7A2048", alpha=0.2)+
-    scale_x_continuous(limits=c(0,1), expand=c(0,0))+
-#    scale_y_continuous(limits=c(0,0.5), expand=c(0,0))+
-    xlab("distances")+
-    ylab("Chi-square similary distance estimate")+
-    theme_classic(base_size=10)+
-    theme(axis.title.x = element_text(vjust = 0, size = 10),
-          axis.title.y = element_text(vjust = 2, size = 10))
-
-
-head(hi2)
-
-ab <- plot_grid(sampling, hi_Hindex, ncol=2, labels=c("a", "b"))
-cde <- plot_grid(hi_HI, gen_HI, hi_gen, ncol=3, labels=c("c", "d", "e"))
-fg <- plot_grid(f,g, ncol=2, labels=c("f", "g"))
-Fig2 <- plot_grid(ab, cde, fg, nrow=3, rel_heights=c(0.9, 1, 0.9))
-
-ggsave("fig/Figure1.pdf", Fig2, width=190, height=180, units="mm", dpi=300)
-
-
-
-
-#mcmcglmm_model<-MCMCglmm(Microbiome_similarity~1+spatial+locality+genetic_dist*hi+year+BMI+sex,
+#mcmcglmm_model<-MCMCglmm(Microbiome_similarity~1+spatial+locality+HI+He+year+BMI+sex,
 #                            data=data.dyad,
 #                            family= "gaussian",
 #                            random =~ mm(IDA+IDB),
 #                            verbose=FALSE)
-#saveRDS(mcmcglmm_model, "tmp/mcmcglmm_model.rds")
 mcmcglmm_model <- readRDS("tmp/mcmcglmm_model.rds")
 summary(mcmcglmm_model)
 
-#MCMCglmm gaussian model
-#mcmcglmm_model_chi<-MCMCglmm(Microbiome_similarity_chi~1+spatial+locality+genetic_dist*hi+year+BMI+sex,
+#mcmcglmm_model_chi<-MCMCglmm(Microbiome_similarity_chi~1+spatial+locality+HI+He+year+BMI+sex,
 #                            data=data.dyad,
 #                            family= "gaussian",
 #                            random =~ mm(IDA+IDB),
@@ -455,7 +267,6 @@ summary(mcmcglmm_model)
 #saveRDS(mcmcglmm_model, "tmp/mcmcglmm_model.rds")
 mcmcglmm_model_chi <- readRDS("tmp/mcmcglmm_model.rds")
 summary(mcmcglmm_model_chi)
-
 
 #Denisty overlay = # Compare distribution of response variable to distributions of a set of predicted response variable values based on model -- are they a good fit?
 #pp_check(model1) # fine
@@ -595,6 +406,7 @@ FigX_chi <-    ggplot(cat2_chi, aes(x = value, y=Parameter, fill=Parameter))+
 FigureS2 <- plot_grid(FigX, FigX_chi, labels="auto")
 ggsave("fig/figureS2.pdf", FigureS2, width=180, height=180, units="mm", dpi=300)
 
+
 #Now we decompose the full models with jaccard and then chi-squared distances, to see how the results are dependent on particular genus
 ###################
 # sanity check
@@ -618,23 +430,23 @@ doLeaveOneOut <- FALSE
 
 if(doLeaveOneOut){
 #start cluster
-dropRes_list<-list()
-cl <- parallel::makeCluster(60, type="FORK")
+dropRes_list_J<-list()
+cl <- parallel::makeCluster(40, type="FORK")
 doParallel::registerDoParallel(cl)
-dropRes_list<-foreach(i = 1:length(genuses)) %dopar% {
+dropRes_list_J<-foreach(i = 1:length(genuses)) %dopar% {
     library(phyloseq)
     #choose the genus to drop and prune the taxa to keep everything else
     gen.i<-genuses[i]
     taxa_tokeep<-rownames(tax[which(tax$Genus!=genuses[i]),])
     mic.i<-prune_taxa(taxa_tokeep, PS.TSS)
-    #Calculate Jaccard and Bray-Curtis microbiome dissimilarity for each mouse pair
-    JACM.i<- as.matrix(phyloseq::distance(mic.i, method="jaccard"))
-    BRAY.i<- as.matrix(phyloseq::distance(mic.i, method="bray"))
+    #Calculate Jaccard and Aitchison dissimilarity for each mouse pair
+    JACM.i<- as.matrix(phyloseq::distance(mic.i, method="jaccard", type="samples", binary=T))
+    AIT.i <- as.matrix(vegan::vegdist(mic.i@otu_table, method="aitchison", pseudocount=1))
     #Unravel dissimilarity matrices into vectors
-    bray<-c(as.dist(BRAY.i))
     jac<-c(as.dist(JACM.i))
+    ait<-c(as.dist(AIT.i))
     #Make a new dyadic data frame from these vectors and order it to be in the same order as       the original dyadic data frame
-    data.dyad.i<-data.frame(Jaccard=jac,BrayCurtis=bray)
+    data.dyad.i<-data.frame(Jaccard=jac,Aitchison=ait)
     # extracting Sample_name-combinations of the matrix
     list<-expand.grid(key$Sample_name,key$Sample_name)
     # This created sample-to-same-sample pairs as well. Get rid of these:
@@ -657,56 +469,58 @@ dropRes_list<-foreach(i = 1:length(genuses)) %dopar% {
     data.dyad.i$IDB<-keyB$IDB
     # Make sure you have no self comparisons in the data (This is the case by default here,       since we are using just one sample per individual)
     data.dyad.i<-data.dyad.i[which(data.dyad.i$IDA!=data.dyad.i$IDB),] #
-    ### Combine new Jaccard variable with rest of dyadic data columns
+    ### Combine new variables with rest of dyadic data columns
     data.dyad<-data.dyad_REAL
-    data.dyad$Microbiome_similarity<-data.dyad.i$Jaccard
+    data.dyad$MS_J<-data.dyad.i$Jaccard
+    data.dyad$MS_A<-data.dyad.i$Aitchison
     #factorize terms used for multimembership random structure and make sure levels are     same and in same order
     data.dyad$IDA<-as.factor(data.dyad$IDA)
     data.dyad$IDB<-as.factor(data.dyad$IDB)
     all(levels(data.dyad$IDA)==levels(data.dyad$IDB))#T
 # Scale all predictors not between 0-1 already to be between 0-1
-    scalecols<-c("spatial","genetic_dist", "BMI", "year", "hi")
+    scalecols<-c("spatial", "BMI", "year", "He")
     range.use <- function(x,min.use,max.use){(x - min(x,na.rm=T))/(max(x,na.rm=T)-min(x,na.rm=T)) * (max.use - min.use) + min.use }
     for(i in 1:ncol(data.dyad[,which(colnames(data.dyad)%in%scalecols)])){
         data.dyad[,which(colnames(data.dyad)%in%scalecols)][,i]<-range.use(data.dyad[,which(colnames(data.dyad)%in%scalecols)][,i],0,1)
     }
-#Transpose Jaccard dissimilarity to similarity
-        data.dyad$Microbiome_similarity<-1-data.dyad$Microbiome_similarity
+#Transpose dissimilarity to similarity
+    data.dyad$MS_J<-1-data.dyad$MS_J
+    data.dyad$MS_A<-1-data.dyad$MS_A
 #The MCMCglmm model
-dropmodel<-MCMCglmm(Microbiome_similarity~1+spatial+locality+genetic_dist*hi+year+BMI+sex,
+dropmodel_J<-MCMCglmm(MS_J~1+spatial+locality+HI*He+year+BMI+sex,
                             data=data.dyad,
                             family= "gaussian",
                             random =~ mm(IDA+IDB),
                             verbose=FALSE)
    ASVs_dropped.i<-nrow(tax_table(PS.TSS))-nrow(tax_table(mic.i))
-   resdf.i<-data.frame(Genus_dropped=gen.i,
+   resdfJ.i<-data.frame(Genus_dropped=gen.i,
                       ASVs_dropped=ASVs_dropped.i,
-                genetic_dist_Estimate=summary(dropmodel)$solutions["genetic_dist",]["post.mean"],
-                     genetic_dist_lCI=summary(dropmodel)$solutions["genetic_dist",]["l-95% CI"],
-                     genetic_dist_uCI=summary(dropmodel)$solutions["genetic_dist",]["u-95% CI"],
-                     spatial_Estimate=summary(dropmodel)$solutions["spatial",]["post.mean"],
-                          spatial_lCI=summary(dropmodel)$solutions["spatial",]["l-95% CI"],
-                          spatial_uCI=summary(dropmodel)$solutions["spatial",]["u-95% CI"],
-                          hi_Estimate=summary(dropmodel)$solutions["hi",]["post.mean"],
-                               hi_lCI=summary(dropmodel)$solutions["hi",]["l-95% CI"],
-                               hi_uCI=summary(dropmodel)$solutions["hi",]["u-95% CI"],
-                    locality_Estimate=summary(dropmodel)$solutions["locality1",]["post.mean"],
-                         locality_lCI=summary(dropmodel)$solutions["locality1",]["l-95% CI"],
-                         locality_uCI=summary(dropmodel)$solutions["locality1",]["u-95% CI"],
-                        year_Estimate=summary(dropmodel)$solutions["year",]["post.mean"],
-                             year_lCI=summary(dropmodel)$solutions["year",]["l-95% CI"],
-                             year_uCI=summary(dropmodel)$solutions["year",]["u-95% CI"],
-                         BMI_Estimate=summary(dropmodel)$solutions["BMI",]["post.mean"],
-                              BMI_lCI=summary(dropmodel)$solutions["BMI",]["l-95% CI"],
-                              BMI_uCI=summary(dropmodel)$solutions["BMI",]["u-95% CI"],
-                gen_hi_Estimate=summary(dropmodel)$solutions["genetic_dist:hi",]["post.mean"],
-                         gen_hi_lCI=summary(dropmodel)$solutions["genetic_dist:hi",]["l-95% CI"],
-                gen_hi_uCI=summary(dropmodel)$solutions["genetic_dist:hi",]["u-95% CI"]
+                HI_Estimate=summary(dropmodel_J)$solutions["HI",]["post.mean"],
+                     HI_lCI=summary(dropmodel_J)$solutions["HI",]["l-95% CI"],
+                     HI_uCI=summary(dropmodel_J)$solutions["HI",]["u-95% CI"],
+                     spatial_Estimate=summary(dropmodel_J)$solutions["spatial",]["post.mean"],
+                          spatial_lCI=summary(dropmodel_J)$solutions["spatial",]["l-95% CI"],
+                          spatial_uCI=summary(dropmodel_J)$solutions["spatial",]["u-95% CI"],
+                          He_Estimate=summary(dropmodel_J)$solutions["He",]["post.mean"],
+                               He_lCI=summary(dropmodel_J)$solutions["He",]["l-95% CI"],
+                               He_uCI=summary(dropmodel_J)$solutions["He",]["u-95% CI"],
+                    locality_Estimate=summary(dropmodel_J)$solutions["locality1",]["post.mean"],
+                         locality_lCI=summary(dropmodel_J)$solutions["locality1",]["l-95% CI"],
+                         locality_uCI=summary(dropmodel_J)$solutions["locality1",]["u-95% CI"],
+                        year_Estimate=summary(dropmodel_J)$solutions["year",]["post.mean"],
+                             year_lCI=summary(dropmodel_J)$solutions["year",]["l-95% CI"],
+                             year_uCI=summary(dropmodel_J)$solutions["year",]["u-95% CI"],
+                         BMI_Estimate=summary(dropmodel_J)$solutions["BMI",]["post.mean"],
+                              BMI_lCI=summary(dropmodel_J)$solutions["BMI",]["l-95% CI"],
+                              BMI_uCI=summary(dropmodel_J)$solutions["BMI",]["u-95% CI"],
+                       HI_He_Estimate=summary(dropmodel_J)$solutions["HI:He",]["post.mean"],
+                           HI_He_lCI=summary(dropmodel_J)$solutions["HI:He",]["l-95% CI"],
+                            HI_He_uCI=summary(dropmodel_J)$solutions["HI:He",]["u-95% CI"]
                       )
-    return(resdf.i)
+    return(resdfJ.i)
 }
 parallel::stopCluster(cl)
-    saveRDS(dropRes_list,"tmp/dropRes_list.rds")
+    saveRDS(dropRes_list_J,"tmp/dropRes_list_J.rds")
 }
 
 dropRes_list <- readRDS("tmp/dropRes_list.rds")
@@ -892,28 +706,28 @@ gen <- ggplot(data=plot_cor, aes(x=genetic_dist_Estimate, y=Group, fill=Group))+
 Fig3 <- plot_grid(spa, loc, hi, gen, labels="auto")
 
 ##############################################################################
-############################## now for chi ####################################
+############################## now for ait ####################################
 ###############################################################################
 
 if(doLeaveOneOut){
 #start cluster
-dropRes_list<-list()
+dropRes_list_A<-list()
 cl <- parallel::makeCluster(60, type="FORK")
 doParallel::registerDoParallel(cl)
-dropRes_list<-foreach(i = 1:length(genuses)) %dopar% {
+dropRes_list_A<-foreach(i = 1:length(genuses)) %dopar% {
     library(phyloseq)
     #choose the genus to drop and prune the taxa to keep everything else
     gen.i<-genuses[i]
     taxa_tokeep<-rownames(tax[which(tax$Genus!=genuses[i]),])
     mic.i<-prune_taxa(taxa_tokeep, PS.TSS)
-    #Calculate Jaccard and Bray-Curtis microbiome dissimilarity for each mouse pair
-    JACM.i<- as.matrix(phyloseq::distance(mic.i, method="jaccard"))
-    CHI.i<- as.matrix(vegan::vegdist(PS.TSS@otu_table, method="chisq"))
+    #Calculate Jaccard and Aitchison dissimilarity for each mouse pair
+    JACM.i<- as.matrix(phyloseq::distance(mic.i, method="jaccard", type="samples", binary=T))
+    AIT.i <- as.matrix(vegan::vegdist(mic.i@otu_table, method="aitchison", pseudocount=1))
     #Unravel dissimilarity matrices into vectors
-    chi<-c(as.dist(CHI.i))
     jac<-c(as.dist(JACM.i))
+    ait<-c(as.dist(AIT.i))
     #Make a new dyadic data frame from these vectors and order it to be in the same order as       the original dyadic data frame
-    data.dyad.i<-data.frame(Jaccard=jac,CHI=chi)
+    data.dyad.i<-data.frame(Jaccard=jac,Aitchison=ait)
     # extracting Sample_name-combinations of the matrix
     list<-expand.grid(key$Sample_name,key$Sample_name)
     # This created sample-to-same-sample pairs as well. Get rid of these:
@@ -936,59 +750,61 @@ dropRes_list<-foreach(i = 1:length(genuses)) %dopar% {
     data.dyad.i$IDB<-keyB$IDB
     # Make sure you have no self comparisons in the data (This is the case by default here,       since we are using just one sample per individual)
     data.dyad.i<-data.dyad.i[which(data.dyad.i$IDA!=data.dyad.i$IDB),] #
-    ### Combine new Jaccard variable with rest of dyadic data columns
+    ### Combine new variables with rest of dyadic data columns
     data.dyad<-data.dyad_REAL
-    data.dyad$Microbiome_similarity<-data.dyad.i$CHI
+    data.dyad$MS_J<-data.dyad.i$Jaccard
+    data.dyad$MS_A<-data.dyad.i$Aitchison
     #factorize terms used for multimembership random structure and make sure levels are     same and in same order
     data.dyad$IDA<-as.factor(data.dyad$IDA)
     data.dyad$IDB<-as.factor(data.dyad$IDB)
     all(levels(data.dyad$IDA)==levels(data.dyad$IDB))#T
 # Scale all predictors not between 0-1 already to be between 0-1
-    scalecols<-c("spatial","genetic_dist", "BMI", "year", "hi")
+    scalecols<-c("spatial", "BMI", "year", "He")
     range.use <- function(x,min.use,max.use){(x - min(x,na.rm=T))/(max(x,na.rm=T)-min(x,na.rm=T)) * (max.use - min.use) + min.use }
     for(i in 1:ncol(data.dyad[,which(colnames(data.dyad)%in%scalecols)])){
         data.dyad[,which(colnames(data.dyad)%in%scalecols)][,i]<-range.use(data.dyad[,which(colnames(data.dyad)%in%scalecols)][,i],0,1)
     }
-#Transpose Jaccard dissimilarity to similarity
-        data.dyad$Microbiome_similarity<-1-data.dyad$Microbiome_similarity
+#Transpose dissimilarity to similarity
+    data.dyad$MS_J<-1-data.dyad$MS_J
+    data.dyad$MS_A<-1-data.dyad$MS_A
 #The MCMCglmm model
-dropmodel<-MCMCglmm(Microbiome_similarity~1+spatial+locality+genetic_dist*hi+year+BMI+sex,
+dropmodel_A<-MCMCglmm(MS_A~1+spatial+locality+HI*He+year+BMI+sex,
                             data=data.dyad,
                             family= "gaussian",
                             random =~ mm(IDA+IDB),
                             verbose=FALSE)
    ASVs_dropped.i<-nrow(tax_table(PS.TSS))-nrow(tax_table(mic.i))
-   resdf.i<-data.frame(Genus_dropped=gen.i,
+   resdfA.i<-data.frame(Genus_dropped=gen.i,
                       ASVs_dropped=ASVs_dropped.i,
-                genetic_dist_Estimate=summary(dropmodel)$solutions["genetic_dist",]["post.mean"],
-                     genetic_dist_lCI=summary(dropmodel)$solutions["genetic_dist",]["l-95% CI"],
-                     genetic_dist_uCI=summary(dropmodel)$solutions["genetic_dist",]["u-95% CI"],
-                     spatial_Estimate=summary(dropmodel)$solutions["spatial",]["post.mean"],
-                          spatial_lCI=summary(dropmodel)$solutions["spatial",]["l-95% CI"],
-                          spatial_uCI=summary(dropmodel)$solutions["spatial",]["u-95% CI"],
-                          hi_Estimate=summary(dropmodel)$solutions["hi",]["post.mean"],
-                               hi_lCI=summary(dropmodel)$solutions["hi",]["l-95% CI"],
-                               hi_uCI=summary(dropmodel)$solutions["hi",]["u-95% CI"],
-                    locality_Estimate=summary(dropmodel)$solutions["locality1",]["post.mean"],
-                         locality_lCI=summary(dropmodel)$solutions["locality1",]["l-95% CI"],
-                         locality_uCI=summary(dropmodel)$solutions["locality1",]["u-95% CI"],
-                        year_Estimate=summary(dropmodel)$solutions["year",]["post.mean"],
-                             year_lCI=summary(dropmodel)$solutions["year",]["l-95% CI"],
-                             year_uCI=summary(dropmodel)$solutions["year",]["u-95% CI"],
-                         BMI_Estimate=summary(dropmodel)$solutions["BMI",]["post.mean"],
-                              BMI_lCI=summary(dropmodel)$solutions["BMI",]["l-95% CI"],
-                              BMI_uCI=summary(dropmodel)$solutions["BMI",]["u-95% CI"],
-                gen_hi_Estimate=summary(dropmodel)$solutions["genetic_dist:hi",]["post.mean"],
-                         gen_hi_lCI=summary(dropmodel)$solutions["genetic_dist:hi",]["l-95% CI"],
-                gen_hi_uCI=summary(dropmodel)$solutions["genetic_dist:hi",]["u-95% CI"]
+                HI_Estimate=summary(dropmodel_A)$solutions["HI",]["post.mean"],
+                     HI_lCI=summary(dropmodel_A)$solutions["HI",]["l-95% CI"],
+                     HI_uCI=summary(dropmodel_A)$solutions["HI",]["u-95% CI"],
+                     spatial_Estimate=summary(dropmodel_A)$solutions["spatial",]["post.mean"],
+                          spatial_lCI=summary(dropmodel_A)$solutions["spatial",]["l-95% CI"],
+                          spatial_uCI=summary(dropmodel_A)$solutions["spatial",]["u-95% CI"],
+                          He_Estimate=summary(dropmodel_A)$solutions["He",]["post.mean"],
+                               He_lCI=summary(dropmodel_A)$solutions["He",]["l-95% CI"],
+                               He_uCI=summary(dropmodel_A)$solutions["He",]["u-95% CI"],
+                    locality_Estimate=summary(dropmodel_A)$solutions["locality1",]["post.mean"],
+                         locality_lCI=summary(dropmodel_A)$solutions["locality1",]["l-95% CI"],
+                         locality_uCI=summary(dropmodel_A)$solutions["locality1",]["u-95% CI"],
+                        year_Estimate=summary(dropmodel_A)$solutions["year",]["post.mean"],
+                             year_lCI=summary(dropmodel_A)$solutions["year",]["l-95% CI"],
+                             year_uCI=summary(dropmodel_A)$solutions["year",]["u-95% CI"],
+                         BMI_Estimate=summary(dropmodel_A)$solutions["BMI",]["post.mean"],
+                              BMI_lCI=summary(dropmodel_A)$solutions["BMI",]["l-95% CI"],
+                              BMI_uCI=summary(dropmodel_A)$solutions["BMI",]["u-95% CI"],
+                       HI_He_Estimate=summary(dropmodel_A)$solutions["HI:He",]["post.mean"],
+                            HI_He_lCI=summary(dropmodel_A)$solutions["HI:He",]["l-95% CI"],
+                            HI_He_uCI=summary(dropmodel_A)$solutions["HI:He",]["u-95% CI"]
                       )
-    return(resdf.i)
+    return(resdfA.i)
 }
 parallel::stopCluster(cl)
-saveRDS(dropRes_list,"tmp/dropRes_list_chi.rds")
+    saveRDS(dropRes_list_A,"tmp/dropRes_list_A.rds")
 }
 
-dropRes_list <- readRDS("tmp/dropRes_list_chi.rds")
+dropRes_list_A <- readRDS("tmp/dropRes_list_A.rds")
 
 #########################################################################
 ##rbind the resulting data frames to single master data frame
@@ -1139,4 +955,6 @@ Fig3_chi <- plot_grid(spa, loc, hi, gen, labels="auto")
 # save
 ggsave("fig/figureS3_jac.pdf", Fig3, width=170, height=200, units="mm", dpi=300)
 ggsave("fig/figureS4_chi.pdf", Fig3_chi, width=170, height=200, units="mm", dpi=300)
+
+#### residulas
 
