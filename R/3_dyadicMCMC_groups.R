@@ -36,8 +36,6 @@ library(gganimate)
 library(posterior)
 library(distributional)
 
-library(metagMisc)
-
 ### we don't include sex because it does not converge
 PS.TSS <- readRDS("tmp/PS.TSS_filtered.rds")
 
@@ -97,10 +95,29 @@ model1_bac<-brm(jac_bac~1+ spatial+locality+HI*He+year+BMI+sex+
                 (1|mm(IDA,IDB)),
                 data = data.dyad,
                 family= "gaussian",
-                warmup = 1000, iter = 3000,
+                warmup = 1000, iter = 5000,
                 cores = 20, chains = 4,
                inits=0)
 saveRDS(model1_bac, "tmp/BRMmodel1_bac.rds")
+
+model1_bacS<-brm(jac_bac~1+ spatial+locality+HI*He+Hx+year+BMI+sex+
+                (1|mm(IDA,IDB)),
+                data = data.dyad,
+                family= "gaussian",
+                warmup = 1000, iter = 3000,
+                cores = 20, chains = 4,
+               inits=0)
+saveRDS(model1_bacS, "tmp/BRMmodel1_bacS.rds")
+
+model1_bacS2<-brm(jac_bac~1+ spatial+locality+HI+Hx+year+BMI+sex+
+                (1|mm(IDA,IDB)),
+                data = data.dyad,
+                family= "gaussian",
+                warmup = 1000, iter = 3000,
+                cores = 20, chains = 4,
+               inits=0)
+saveRDS(model1_bacS2, "tmp/BRMmodel1_bacS2.rds")
+
 
 model1_bac_ait<-brm(ait_bac~1+ spatial+locality+HI*He+year+BMI+sex+
                 (1|mm(IDA,IDB)),
@@ -111,6 +128,24 @@ model1_bac_ait<-brm(ait_bac~1+ spatial+locality+HI*He+year+BMI+sex+
                 inits=0)
 saveRDS(model1_bac_ait, "tmp/BRMmodel1_bac_ait.rds")
 
+model1_bac_aitS<-brm(ait_bac~1+ spatial+locality+HI*He+Hx+year+BMI+sex+
+                (1|mm(IDA,IDB)),
+                data = data.dyad,
+                family= "gaussian",
+                warmup = 1000, iter = 3000,
+                cores = 20, chains = 4,
+                inits=0)
+saveRDS(model1_bac_aitS, "tmp/BRMmodel1_bac_aitS.rds")
+
+model1_bac_aitS2<-brm(ait_bac~1+ spatial+locality+HI+Hx+year+BMI+sex+
+                (1|mm(IDA,IDB)),
+                data = data.dyad,
+                family= "gaussian",
+                warmup = 1000, iter = 3000,
+                cores = 20, chains = 4,
+                inits=0)
+saveRDS(model1_bac_aitS2, "tmp/BRMmodel1_bac_aitS2.rds")
+
 model1_para<-brm(jac_para~1+ spatial+locality+HI*He+year+BMI+sex+
                 (1|mm(IDA,IDB)),
                 data = data.dyad,
@@ -120,14 +155,50 @@ model1_para<-brm(jac_para~1+ spatial+locality+HI*He+year+BMI+sex+
                inits=0)
 saveRDS(model1_para, "tmp/BRMmodel1_para.rds")
 
+model1_paraS<-brm(jac_para~1+ spatial+locality+HI*He+Hx+year+BMI+sex+
+                (1|mm(IDA,IDB)),
+                data = data.dyad,
+                family= "gaussian",
+                warmup = 1000, iter = 3000,
+                cores = 20, chains = 4,
+               inits=0)
+saveRDS(model1_paraS, "tmp/BRMmodel1_paraS.rds")
+
+model1_paraS2<-brm(jac_para~1+ spatial+locality+HI+Hx+year+BMI+sex+
+                (1|mm(IDA,IDB)),
+                data = data.dyad,
+                family= "gaussian",
+                warmup = 1000, iter = 3000,
+                cores = 20, chains = 4,
+               inits=0)
+saveRDS(model1_paraS2, "tmp/BRMmodel1_paraS2.rds")
+
 model1_para_ait<-brm(ait_para~1+ spatial+locality+HI*He+year+BMI+sex+
+                (1|mm(IDA,IDB)),
+                data = data.dyad,
+                family= "gaussian",
+                warmup = 1000, iter = 5000,
+                cores = 20, chains = 4,
+                inits=0)
+saveRDS(model1_para_ait, "tmp/BRMmodel1_para_ait.rds")
+
+model1_para_aitS<-brm(ait_para~1+ spatial+locality+HI*He+Hx+year+BMI+sex+
                 (1|mm(IDA,IDB)),
                 data = data.dyad,
                 family= "gaussian",
                 warmup = 1000, iter = 3000,
                 cores = 20, chains = 4,
                 inits=0)
-saveRDS(model1_para_ait, "tmp/BRMmodel1_para_ait.rds")
+saveRDS(model1_para_aitS, "tmp/BRMmodel1_para_aitS.rds")
+
+model1_para_aitS2<-brm(ait_para~1+ spatial+locality+HI+Hx+year+BMI+sex+
+                (1|mm(IDA,IDB)),
+                data = data.dyad,
+                family= "gaussian",
+                warmup = 1000, iter = 3000,
+                cores = 20, chains = 4,
+                inits=0)
+saveRDS(model1_para_aitS2, "tmp/BRMmodel1_para_aitS2.rds")
 
 model1_fun<-brm(jac_fun~1+ spatial+locality+HI*He+year+BMI+sex+
                 (1|mm(IDA,IDB)),
@@ -138,6 +209,24 @@ model1_fun<-brm(jac_fun~1+ spatial+locality+HI*He+year+BMI+sex+
                inits=0)
 saveRDS(model1_fun, "tmp/BRMmodel1_fun.rds")
 
+model1_funS<-brm(jac_fun~1+ spatial+locality+HI*He+Hx+year+BMI+sex+
+                (1|mm(IDA,IDB)),
+                data = data.dyad,
+                family= "gaussian",
+                warmup = 1000, iter = 3000,
+                cores = 20, chains = 4,
+               inits=0)
+saveRDS(model1_funS, "tmp/BRMmodel1_funS.rds")
+
+model1_funS2<-brm(jac_fun~1+ spatial+locality+HI+Hx+year+BMI+sex+
+                (1|mm(IDA,IDB)),
+                data = data.dyad,
+                family= "gaussian",
+                warmup = 1000, iter = 3000,
+                cores = 20, chains = 4,
+               inits=0)
+saveRDS(model1_funS2, "tmp/BRMmodel1_funS2.rds")
+
 model1_fun_ait<-brm(ait_fun~1+ spatial+locality+HI*He+year+BMI+sex+
                 (1|mm(IDA,IDB)),
                 data = data.dyad,
@@ -146,6 +235,24 @@ model1_fun_ait<-brm(ait_fun~1+ spatial+locality+HI*He+year+BMI+sex+
                 cores = 20, chains = 4,
                 inits=0)
 saveRDS(model1_fun_ait, "tmp/BRMmodel1_fun_ait.rds")
+
+model1_fun_aitS<-brm(ait_fun~1+ spatial+locality+HI*He+Hx+year+BMI+sex+
+                (1|mm(IDA,IDB)),
+                data = data.dyad,
+                family= "gaussian",
+                warmup = 1000, iter = 5000,
+                cores = 20, chains = 4,
+                inits=0)
+saveRDS(model1_fun_aitS, "tmp/BRMmodel1_fun_aitS.rds")
+
+model1_fun_aitS2<-brm(ait_fun~1+ spatial+locality+HI+Hx+year+BMI+sex+
+                (1|mm(IDA,IDB)),
+                data = data.dyad,
+                family= "gaussian",
+                warmup = 1000, iter = 3000,
+                cores = 20, chains = 4,
+                inits=0)
+saveRDS(model1_fun_aitS2, "tmp/BRMmodel1_fun_aitS2.rds")
 
 model1_pla<-brm(jac_pla~1+ spatial+locality+HI*He+year+BMI+sex+
                 (1|mm(IDA,IDB)),
@@ -156,6 +263,24 @@ model1_pla<-brm(jac_pla~1+ spatial+locality+HI*He+year+BMI+sex+
                inits=0)
 saveRDS(model1_pla, "tmp/BRMmodel1_pla.rds")
 
+model1_plaS<-brm(jac_pla~1+ spatial+locality+HI*He+Hx+year+BMI+sex+
+                (1|mm(IDA,IDB)),
+                data = data.dyad,
+                family= "gaussian",
+                warmup = 1000, iter = 3000,
+                cores = 20, chains = 4,
+               inits=0)
+saveRDS(model1_plaS, "tmp/BRMmodel1_plaS.rds")
+
+model1_plaS2<-brm(jac_pla~1+ spatial+locality+HI+Hx+year+BMI+sex+
+                (1|mm(IDA,IDB)),
+                data = data.dyad,
+                family= "gaussian",
+                warmup = 1000, iter = 3000,
+                cores = 20, chains = 4,
+               inits=0)
+saveRDS(model1_plaS2, "tmp/BRMmodel1_plaS2.rds")
+
 model1_pla_ait<-brm(ait_pla~1+ spatial+locality+HI*He+year+BMI+sex+
                 (1|mm(IDA,IDB)),
                 data = data.dyad,
@@ -165,31 +290,59 @@ model1_pla_ait<-brm(ait_pla~1+ spatial+locality+HI*He+year+BMI+sex+
                 inits=0)
 saveRDS(model1_pla_ait, "tmp/BRMmodel1_pla_ait.rds")
 
+model1_pla_aitS<-brm(ait_pla~1+ spatial+locality+HI*He+Hx+year+BMI+sex+
+                (1|mm(IDA,IDB)),
+                data = data.dyad,
+                family= "gaussian",
+                warmup = 1000, iter = 3000,
+                cores = 20, chains = 4,
+                inits=0)
+saveRDS(model1_pla_aitS, "tmp/BRMmodel1_pla_aitS.rds")
+
+model1_pla_aitS2<-brm(ait_pla~1+ spatial+locality+HI+Hx+year+BMI+sex+
+                (1|mm(IDA,IDB)),
+                data = data.dyad,
+                family= "gaussian",
+                warmup = 1000, iter = 3000,
+                cores = 20, chains = 4,
+                inits=0)
+saveRDS(model1_pla_aitS2, "tmp/BRMmodel1_pla_aitS2.rds")
+
 
 #################################
 ### uploading models
 model1 <- readRDS("tmp/BRMmodel1.rds")
-model1_chi <- readRDS("tmp/BRMmodel1_chi.rds")
+model1_ai <- readRDS("tmp/BRMmodel1_ai.rds")
 
 model1_para <- readRDS("tmp/BRMmodel1_para.rds")
-model1_Fungi <- readRDS("tmp/BRMmodel1_Fungi.rds")
-model1_diet <- readRDS("tmp/BRMmodel1_diet.rds")
+model1_Fungi <- readRDS("tmp/BRMmodel1_fun.rds")
+model1_diet <- readRDS("tmp/BRMmodel1_pla.rds")
 model1_bac <- readRDS("tmp/BRMmodel1_bac.rds")
-model1_para_chi <- readRDS("tmp/BRMmodel1_para_chi.rds")
-model1_Fungi_chi <- readRDS("tmp/BRMmodel1_Fungi_chi.rds")
-model1_diet_chi <- readRDS("tmp/BRMmodel1_diet_chi.rds")
-model1_bac_chi <- readRDS("tmp/BRMmodel1_bac_chi.rds")
+model1_para_ai <- readRDS("tmp/BRMmodel1_para_ait.rds")
+model1_Fungi_ai <- readRDS("tmp/BRMmodel1_fun_ait.rds")
+model1_diet_ai <- readRDS("tmp/BRMmodel1_pla_ait.rds")
+model1_bac_ai <- readRDS("tmp/BRMmodel1_bac_ait.rds")
 
-print(model1, digits=3)
-print(model1_chi, digits=3)
-print(model1_para, digits=3)
-print(model1_Fungi, digits=3)
-print(model1_diet, digits=3)
-print(model1_bac, digits=4)
-print(model1_para_chi, digits=3)
-print(model1_Fungi_chi, digits=3)
-print(model1_diet_chi, digits=3)
-print(model1_bac_chi, digits=4)
+model1_paraS <- readRDS("tmp/BRMmodel1_paraS.rds")
+model1_FungiS <- readRDS("tmp/BRMmodel1_funS.rds")
+model1_dietS <- readRDS("tmp/BRMmodel1_plaS.rds")
+model1_bacS <- readRDS("tmp/BRMmodel1_bacS.rds")
+model1_para_aiS <- readRDS("tmp/BRMmodel1_para_aitS.rds")
+model1_Fungi_aiS <- readRDS("tmp/BRMmodel1_fun_aitS.rds")
+model1_diet_aiS <- readRDS("tmp/BRMmodel1_pla_aitS.rds")
+model1_bac_aiS <- readRDS("tmp/BRMmodel1_bac_aitS.rds")
+
+model1_paraS2 <- readRDS("tmp/BRMmodel1_paraS2.rds")
+model1_FungiS2 <- readRDS("tmp/BRMmodel1_funS2.rds")
+model1_dietS2 <- readRDS("tmp/BRMmodel1_plaS2.rds")
+model1_bacS2 <- readRDS("tmp/BRMmodel1_bacS2.rds")
+model1_para_aiS2 <- readRDS("tmp/BRMmodel1_para_aitS2.rds")
+model1_Fungi_aiS2 <- readRDS("tmp/BRMmodel1_fun_aitS2.rds")
+model1_diet_aiS2 <- readRDS("tmp/BRMmodel1_pla_aitS2.rds")
+model1_bac_aiS2 <- readRDS("tmp/BRMmodel1_bac_aitS2.rds")
+
+
+
 
 res.fun <- function(model1_para, name, ASV){
     para <- summary(model1_para)$fixed
@@ -212,11 +365,10 @@ res$Domain <- factor(res$Domain, levels=c( "Bacteria", "Parasites", "Fungi", "Pl
 library(scales)
 #coul=c("#154360", "#b71c1c", "#512e5f", "#0e6251")
 #coul=c("#edca82", "#097770", "#e0cdbe", "#a9c0a6")
-coul=c("#F8B195","#F67280", "#6C5B7B", "#355C7D")
-
+coul=c("#F8B195","#F67280", "#6C5B7B", "#355C7D", "#a9c0a6")
 #Spatial, Locality, genetic, hi
 
-res <- res[res$Effect%in%c("genetic_dist", "hi", "spatial", "locality1"),]
+res <- res[res$Effect%in%c("HI", "He", "spatial", "locality1", "HI:He"),]
 
 re.plot <- ggplot(res, aes(x = Estimate, y = Effect, fill = Effect)) +
     geom_errorbar(aes(xmin=lCI, xmax=uCI, colour=Effect), size=1, width=0.4)+
@@ -225,7 +377,7 @@ re.plot <- ggplot(res, aes(x = Estimate, y = Effect, fill = Effect)) +
     scale_colour_manual(values = coul) +
             xlab("Parameter estimate") +
     ylab("") +
-    scale_y_discrete(labels = c("Genetic distances", "Hybridicity distances", "Shared locality", "Spatial distances")) +
+#    scale_y_discrete(labels = c("HI distances", "He distances", "Shared locality", "Spatial distances")) +
     geom_vline(xintercept=0, linetype="dashed", linewidth=1)+
     facet_grid(Domain ~ ., scales = "free_y", space = "free_y")+
     theme_classic(base_size=12)+
@@ -242,22 +394,22 @@ re.plot <- ggplot(res, aes(x = Estimate, y = Effect, fill = Effect)) +
 re.plot
 
 
-res <- res.fun(model1_para_chi, "Parasite", 11)
-res <- rbind(res, res.fun(model1_bac_chi, "Bacteria", 383))
-res <- rbind(res, res.fun(model1_diet_chi, "Diet", 45))
-res <- rbind(res, res.fun(model1_Fungi_chi, "Fungi", 65))
-res <- rbind(res, res.fun(model1_chi, "Full model", 588))
+res <- res.fun(model1_para_ai, "Parasite", 11)
+res <- rbind(res, res.fun(model1_bac_ai, "Bacteria", 383))
+res <- rbind(res, res.fun(model1_diet_ai, "Diet", 45))
+res <- rbind(res, res.fun(model1_Fungi_ai, "Fungi", 65))
+res <- rbind(res, res.fun(model1_ai, "Full model", 588))
 res$Domain[res$Domain=="Diet"] <- "Plants"
 res$Domain[res$Domain=="Parasite"] <- "Parasites"
 res$Domain <- factor(res$Domain, levels=c( "Bacteria", "Parasites", "Fungi", "Plants", "Full model"))
 library(scales)
 #coul=c("#154360", "#b71c1c", "#512e5f", "#0e6251")
 #coul=c("#edca82", "#097770", "#e0cdbe", "#a9c0a6")
-coul=c("#F8B195","#F67280", "#6C5B7B", "#355C7D")
+coul=c("#F8B195","#F67280", "#6C5B7B", "#355C7D", "#a9c0a6")
 
 #Spatial, Locality, genetic, hi
 
-res <- res[res$Effect%in%c("genetic_dist", "hi", "spatial", "locality1"),]
+res <- res[res$Effect%in%c("HI", "He", "spatial", "locality1", "HI:He"),]
 
 re.plot2 <- ggplot(res, aes(x = Estimate, y = Effect, fill = Effect)) +
     geom_errorbar(aes(xmin=lCI, xmax=uCI, colour=Effect), size=1, width=0.4)+
@@ -266,7 +418,7 @@ re.plot2 <- ggplot(res, aes(x = Estimate, y = Effect, fill = Effect)) +
     scale_colour_manual(values = coul) +
             xlab("Parameter estimate") +
     ylab("") +
-    scale_y_discrete(labels = c("Genetic distances", "Hybridicity distances", "Shared locality", "Spatial distances")) +
+#    scale_y_discrete(labels = c("HI distance", "He distances", "Shared locality", "Spatial distances")) +
     geom_vline(xintercept=0, linetype="dashed", linewidth=1)+
     facet_grid(Domain ~ ., scales = "free_y", space = "free_y")+
     theme_classic(base_size=12)+
@@ -287,18 +439,21 @@ resdf.fun<- function(model1_para, name, ASV){
     para <- summary(model1_para)$fixed
     data.frame(Domain=name,
                ASVs=ASV,
-               genetic_dist_Estimate=para[rownames(para)=="genetic_dist", "Estimate"],
-               genetic_dist_lCI=para[rownames(para)=="genetic_dist", "l-95% CI"],
-               genetic_dist_uCI=para[rownames(para)=="genetic_dist", "u-95% CI"],
+               HI_Estimate=para[rownames(para)=="HI", "Estimate"],
+               HI_lCI=para[rownames(para)=="HI", "l-95% CI"],
+               HI_uCI=para[rownames(para)=="HI", "u-95% CI"],
+               He_Estimate=para[rownames(para)=="He", "Estimate"],
+               He_lCI=para[rownames(para)=="He", "l-95% CI"],
+               He_uCI=para[rownames(para)=="He", "u-95% CI"],
+               Hx_Estimate=para[rownames(para)=="Hx", "Estimate"],
+               Hx_lCI=para[rownames(para)=="Hx", "l-95% CI"],
+               Hx_uCI=para[rownames(para)=="Hx", "u-95% CI"],
                spatial_Estimate=para$Estimate[rownames(para)=="spatial"],
                spatial_lCI=para[rownames(para)=="spatial", "l-95% CI"],
                spatial_uCI=para[rownames(para)=="spatial", "u-95% CI"],
                locality_Estimate=para$Estimate[rownames(para)=="locality1"],
                locality_lCI=para[rownames(para)=="locality1", "l-95% CI"],
                locality_uCI=para[rownames(para)=="locality1", "u-95% CI"],
-               hi_Estimate=para$Estimate[rownames(para)=="hi"],
-               hi_lCI=para[rownames(para)=="hi", "l-95% CI"],
-               hi_uCI=para[rownames(para)=="hi", "u-95% CI"],
                year_Estimate=para$Estimate[rownames(para)=="year"],
                year_lCI=para[rownames(para)=="year", "l-95% CI"],
                year_uCI=para[rownames(para)=="year", "u-95% CI"],
@@ -311,30 +466,31 @@ resdf.fun<- function(model1_para, name, ASV){
                sexFF_Estimate=para$Estimate[rownames(para)=="sexFF"],
                sexFF_lCI=para[rownames(para)=="sexFF", "l-95% CI"],
                sexFF_uCI=para[rownames(para)=="sexFF", "u-95% CI"],
-               gen_hi_Estimate=para$Estimate[rownames(para)=="genetic_dist:hi"],
-               gen_hi_lCI=para[rownames(para)=="genetic_dist:hi", "l-95% CI"],
-               gen_hi_uCI=para[rownames(para)=="genetic_dist:hi", "u-95% CI"]
+               HI_He_Estimate=para$Estimate[rownames(para)=="HI:He"],
+               HI_He_lCI=para[rownames(para)=="HI:He", "l-95% CI"],
+               HI_He_uCI=para[rownames(para)=="HI:He", "u-95% CI"]
                )
 }
 
-res.df <-resdf.fun(model1_para, "Parasite", 11)
-res.df <- rbind(res.df, resdf.fun(model1_bac, "Bacteria", 383))
-res.df <- rbind(res.df, resdf.fun(model1_diet, "Diet", 45))
-res.df <- rbind(res.df, resdf.fun(model1_Fungi, "Fungi", 65))
-res.df <- rbind(res.df, resdf.fun(model1, "Full model", 588))
+res.df <-resdf.fun(model1_paraS, "Parasite", 11)
+res.df <- rbind(res.df, resdf.fun(model1_bacS, "Bacteria", 383))
+res.df <- rbind(res.df, resdf.fun(model1_dietS, "Diet", 45))
+res.df <- rbind(res.df, resdf.fun(model1_FungiS, "Fungi", 65))
+res.df <- rbind(res.df, resdf.fun(model1S, "Full model", 588))
 res.df$Domain <- factor(res.df$Domain, level=c("Bacteria", "Diet", "Parasite", "Fungi", "Full model"))
 
-res.dfC <-resdf.fun(model1_para_chi, "Parasite", 11)
-res.dfC <- rbind(res.dfC, resdf.fun(model1_bac_chi, "Bacteria", 383))
-res.dfC <- rbind(res.dfC, resdf.fun(model1_diet_chi, "Diet", 45))
-res.dfC <- rbind(res.dfC, resdf.fun(model1_Fungi_chi, "Fungi", 65))
-res.dfC <- rbind(res.dfC, resdf.fun(model1_chi, "Full model", 588))
+res.dfC <-resdf.fun(model1_para_aiS, "Parasite", 11)
+#res.dfC <- rbind(res.dfC, resdf.fun(model1_bac_aiS, "Bacteria", 383))
+#res.dfC <- rbind(res.dfC, resdf.fun(model1_diet_aiS, "Diet", 45))
+res.dfC <- rbind(res.dfC, resdf.fun(model1_Fungi_aiS, "Fungi", 65))
+res.dfC <- rbind(res.dfC, resdf.fun(model1_aiS, "Full model", 588))
 res.dfC$Domain <- factor(res.dfC$Domain, level=c("Bacteria", "Diet", "Parasite", "Fungi", "Full model"))
+#res.dfC$Domain <- factor(res.dfC$Domain, level=c("Parasite", "Fungi", "Full model"))
 
 coul <- c("#136f63", "#032b43", "#3f88c5", "#ffba08", "#d00000")
 
-genJ <- ggplot(res.df, aes(x=genetic_dist_Estimate, y=Domain, colour=Domain))+
-    geom_errorbar(aes(xmin=genetic_dist_lCI, xmax=genetic_dist_uCI, colour=Domain),
+genJ <- ggplot(res.df, aes(x=HI_Estimate, y=Domain, colour=Domain))+
+    geom_errorbar(aes(xmin=HI_lCI, xmax=HI_uCI, colour=Domain),
                   size=1, width=0.4)+
     geom_point(size=3)+
     geom_vline(xintercept=0, linetype="dashed", linewidth=1.5)+
@@ -345,42 +501,90 @@ genJ <- ggplot(res.df, aes(x=genetic_dist_Estimate, y=Domain, colour=Domain))+
     theme_classic(base_size=12)+
     theme(legend.position = "none")
 
-genC <- ggplot(res.dfC, aes(x=genetic_dist_Estimate, y=Domain, colour=Domain))+
-    geom_errorbar(aes(xmin=genetic_dist_lCI, xmax=genetic_dist_uCI, colour=Domain),
+genA <- ggplot(res.dfC, aes(x=HI_Estimate, y=Domain, colour=Domain))+
+    geom_errorbar(aes(xmin=HI_lCI, xmax=HI_uCI, colour=Domain),
                   size=1, width=0.4)+
     geom_point(size=3)+
     geom_vline(xintercept=0, linetype="dashed", linewidth=1.5)+
     scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
-    labs(x="Genetic distance estimate", y="")+
+    labs(x="Genetic distance (HI dist)", y="")+
     theme_classic(base_size=12)+
     theme(legend.position = "none")
 
-hiJ <- ggplot(res.df, aes(x=hi_Estimate, y=Domain, colour=Domain))+
-    geom_errorbar(aes(xmin=hi_lCI, xmax=hi_uCI, colour=Domain),
+HeJ <- ggplot(res.df, aes(x=He_Estimate, y=Domain, colour=Domain))+
+    geom_errorbar(aes(xmin=He_lCI, xmax=He_uCI, colour=Domain),
                   size=1, width=0.4)+
     geom_point(size=3)+
     geom_vline(xintercept=0, linetype="dashed", linewidth=1.5)+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
-    labs(x="Hybridicity distance estimate", y="")+
+    labs(x="Heterozygousity distance (He dist)", y="")+
     theme_classic(base_size=12)+
     theme(legend.position = "none")
 
-hiC <- ggplot(res.dfC, aes(x=hi_Estimate, y=Domain, colour=Domain))+
-    geom_errorbar(aes(xmin=hi_lCI, xmax=hi_uCI, colour=Domain),
+HeC <- ggplot(res.dfC, aes(x=He_Estimate, y=Domain, colour=Domain))+
+    geom_errorbar(aes(xmin=He_lCI, xmax=He_uCI, colour=Domain),
                   size=1, width=0.4)+
     geom_point(size=3)+
     geom_vline(xintercept=0, linetype="dashed", linewidth=1.5)+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
-    labs(x="Hybridicity distance estimate", y="")+
+    labs(x="Heterozygousity distance (He dist)", y="")+
     theme_classic(base_size=12)+
     theme(legend.position = "none")
-hiC
+
+HIHeJ <- ggplot(res.df, aes(x=HI_He_Estimate, y=Domain, colour=Domain))+
+    geom_errorbar(aes(xmin=HI_He_lCI, xmax=HI_He_uCI, colour=Domain),
+                  size=1, width=0.4)+
+    geom_point(size=3)+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=1.5)+
+#    scale_x_reverse()+
+   scale_colour_manual(values=coul)+
+#    scale_discrete_vi()+
+    labs(x="HI:He", y="")+
+    theme_classic(base_size=12)+
+    theme(legend.position = "none")
+
+HIHeC <- ggplot(res.dfC, aes(x=HI_He_Estimate, y=Domain, colour=Domain))+
+    geom_errorbar(aes(xmin=HI_He_lCI, xmax=HI_He_uCI, colour=Domain),
+                  size=1, width=0.4)+
+    geom_point(size=3)+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=1.5)+
+#    scale_x_reverse()+
+   scale_colour_manual(values=coul)+
+#    scale_discrete_vi()+
+    labs(x="HI:He", y="")+
+    theme_classic(base_size=12)+
+    theme(legend.position = "none")
+
+HxJ <- ggplot(res.df, aes(x=Hx_Estimate, y=Domain, colour=Domain))+
+    geom_errorbar(aes(xmin=Hx_lCI, xmax=Hx_uCI, colour=Domain),
+                  size=1, width=0.4)+
+    geom_point(size=3)+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=1.5)+
+#    scale_x_reverse()+
+   scale_colour_manual(values=coul)+
+#    scale_discrete_vi()+
+    labs(x="Hybridicity distance (Hx dist)", y="")+
+    theme_classic(base_size=12)+
+    theme(legend.position = "none")
+
+HxC <- ggplot(res.dfC, aes(x=Hx_Estimate, y=Domain, colour=Domain))+
+    geom_errorbar(aes(xmin=Hx_lCI, xmax=Hx_uCI, colour=Domain),
+                  size=1, width=0.4)+
+    geom_point(size=3)+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=1.5)+
+#    scale_x_reverse()+
+   scale_colour_manual(values=coul)+
+#    scale_discrete_vi()+
+    labs(x="Hybridicty distance (Hx dist)", y="")+
+    theme_classic(base_size=12)+
+    theme(legend.position = "none")
+HxC
 
 spaJ <- ggplot(res.df, aes(x=spatial_Estimate, y=Domain, colour=Domain))+
     geom_errorbar(aes(xmin=spatial_lCI, xmax=spatial_uCI, colour=Domain),
@@ -429,8 +633,9 @@ loC <- ggplot(res.dfC, aes(x=locality_Estimate, y=Domain, colour=Domain))+
 
 
 
-Fig2 <- plot_grid(genJ, genC, hiJ, hiC, spaJ, spaJ, loJ, loC, labels="auto", ncol=2)
-ggsave("fig/figure2.pdf", Fig2, width=170, height=200, units="mm", dpi=300)
+Fig2 <- plot_grid(genJ, genA, HeJ, HeC, HIHeJ, HIHeC, HxJ, HxC, spaJ, spaJ, loJ, loC, labels="auto", ncol=2)
+
+ggsave("fig/figure2.pdf", Fig2, width=170, height=220, units="mm", dpi=300)
 
 
 ############## ending analysis here for now ##################
