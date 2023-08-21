@@ -250,25 +250,49 @@ hi_HI <-ggplot(data = metadt, aes(x= HI, y= He))+
           legend.position="bottom")
 
 Fig1 <- plot_grid(hi_HI, hi_HI_dist, hx_HI_dist, hx_He_dist, ncol=1)
-ggsave("fig/Figure1.pdf", Fig1, width=85, height=180, units="mm", dpi=300)
+
+ggsave("fig/Figure1.pdf", Fig1, width=75, height=350, units="mm", dpi=300)
 
 ggsave("fig/Figure1_map.pdf", sampling, width=100, height=120, units="mm", dpi=300)
 
 ## Let's model
+modelJ<-brm(Microbiome_similarity~1+ spatial+HI*He+Hx+year+
+                (1|mm(IDA,IDB)),
+                data = data.dyad,
+                family= "zero_inflated_beta",
+                warmup = 1000, iter = 3000,
+                cores = 20, chains = 4,
+               inits=0)
+modelJ <- add_criterion(modelJ, "loo")
+saveRDS(modelJ, "tmp/BRMmodelJac.rds")
+modelJ <- readRDS("tmp/BRMmodelJac.rds")
+
+modelA<-brm(Microbiome_similarity_ai~1+ spatial+HI*He+Hx+year+
+                (1|mm(IDA,IDB)),
+                data = data.dyad,
+                family= "gaussian",
+                warmup = 1000, iter = 6000,
+                cores = 20, chains = 4,
+                inits=0)
+modelA <- add_criterion(modelA, "loo")
+saveRDS(modelA, "tmp/BRMmodelA.rds")
+model1_aiS <- readRDS("tmp/BRMmodel1_aiS.rds")
+
+
 #model1<-brm(Microbiome_similarity~1+ spatial+locality+HI*He+year+BMI+sex+
 #                (1|mm(IDA,IDB)),
 #                data = data.dyad,
-#                family= "gaussian",
+#                family= "zero_inflated_beta",
 #                warmup = 1000, iter = 3000,
 #                cores = 20, chains = 4,
 #               inits=0)
 #model1 <- add_criterion(model1, "loo")
 #saveRDS(model1, "tmp/BRMmodel1.rds")
-model1 <- readRDS("tmp/BRMmodel1.rds")
+#model1 <- readRDS("tmp/BRMmodel1.rds")
 model1S<-brm(Microbiome_similarity~1+ spatial+locality+HI*He+Hx+year+BMI+sex+
                 (1|mm(IDA,IDB)),
                 data = data.dyad,
-                family= "gaussian",
+                family= "zero_inflated_beta",
                 warmup = 1000, iter = 3000,
                 cores = 20, chains = 4,
                inits=0)
@@ -322,7 +346,6 @@ model1_aiS2 <- readRDS("tmp/BRMmodel1_aiS2.rds")
 
 
 loo(model1)
-
 
 #mcmcglmm_model<-MCMCglmm(Microbiome_similarity~1+spatial+locality+HI+He+year+BMI+sex,
 #                            data=data.dyad,

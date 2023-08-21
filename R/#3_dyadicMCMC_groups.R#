@@ -201,7 +201,6 @@ modelJ_diet <- readRDS("tmp/BRMmodelJ_diet.rds")
 modelA_diet <- readRDS("tmp/BRMmodelA_diet.rds")
 modelA_para <- readRDS("tmp/BRMmodelA_para.rds")
 modelJ_para <- readRDS("tmp/BRMmodelJ_para.rds")
-
 modelJ_bac <- readRDS("tmp/BRMmodelJ_bac.rds")
 modelA_bac <- readRDS("tmp/BRMmodelA_bac.rds")
 
@@ -231,21 +230,18 @@ resdf.fun<- function(model1_para, name, ASV){
 }
 
 res.df <-resdf.fun(modelJ_para, "Parasite", 11)
-
-#res.df <- rbind(res.df, resdf.fun(modelJ_bac, "Bacteria", 383))
+res.df <- rbind(res.df, resdf.fun(modelJ_bac, "Bacteria", 383))
 res.df <- rbind(res.df, resdf.fun(modelJ_diet, "Diet", 45))
 res.df <- rbind(res.df, resdf.fun(modelJ_fun, "Fungi", 65))
-#res.df <- rbind(res.df, resdf.fun(modelJ, "Full model", 588))
-#res.df$Domain <- factor(res.df$Domain, level=c("Bacteria", "Diet", "Parasite", "Fungi", "Full model"))
-res.df$Domain <- factor(res.df$Domain, level=c("Diet", "Parasite", "Fungi"))
+res.df <- rbind(res.df, resdf.fun(modelJ, "Full model", 588))
+res.df$Domain <- factor(res.df$Domain, level=c( "Diet", "Bacteria","Parasite", "Fungi", "Full model"))
 
 res.dfA <-resdf.fun(modelA_para, "Parasite", 11)
-#res.dfA <- rbind(res.dfA, resdf.fun(modelA_bac, "Bacteria", 383))
+res.dfA <- rbind(res.dfA, resdf.fun(modelA_bac, "Bacteria", 383))
 res.dfA <- rbind(res.dfA, resdf.fun(modelA_diet, "Diet", 45))
 res.dfA <- rbind(res.dfA, resdf.fun(modelA_fun, "Fungi", 65))
-#res.dfA <- rbind(res.dfA, resdf.fun(modelA, "Full model", 588))
-#res.dfA$Domain <- factor(res.dfA$Domain, level=c("Bacteria", "Diet", "Parasite", "Fungi", "Full model"))
-res.dfA$Domain <- factor(res.dfA$Domain, level=c("Diet", "Parasite", "Fungi"))
+res.dfA <- rbind(res.dfA, resdf.fun(modelA, "Full model", 588))
+res.dfA$Domain <- factor(res.dfA$Domain, level=c( "Diet", "Bacteria", "Parasite", "Fungi", "Full model"))
 
 coul <- c("#136f63", "#032b43", "#3f88c5", "#ffba08", "#d00000")
 
@@ -281,7 +277,7 @@ HeJ <- ggplot(res.df, aes(x=He_Estimate, y=Domain, colour=Domain))+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
-    labs(x="Expected heterozygousity distance (He-dist)", y="")+
+    labs(x="hHe-dist", y="")+
     theme_classic(base_size=12)+
     theme(legend.position = "none")
 
@@ -293,7 +289,7 @@ HeA <- ggplot(res.dfA, aes(x=He_Estimate, y=Domain, colour=Domain))+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
-    labs(x="Expected heterozygousity distance (He-dist)", y="")+
+    labs(x=""hHe-dist", y="")+
     theme_classic(base_size=12)+
     theme(legend.position = "none")
 
@@ -305,7 +301,7 @@ HIHeJ <- ggplot(res.df, aes(x=HI_He_Estimate, y=Domain, colour=Domain))+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
-    labs(x="genetic distance: He-dist", y="")+
+    labs(x="genetic distance: hHe-dist", y="")+
     theme_classic(base_size=12)+
     theme(legend.position = "none")
 
@@ -317,7 +313,7 @@ HIHeA <- ggplot(res.dfA, aes(x=HI_He_Estimate, y=Domain, colour=Domain))+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
-    labs(x="genetic distance: He-dist", y="")+
+    labs(x="genetic distance: hHe-dist", y="")+
     theme_classic(base_size=12)+
     theme(legend.position = "none")
 
@@ -329,7 +325,7 @@ HxJ <- ggplot(res.df, aes(x=Hx_Estimate, y=Domain, colour=Domain))+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
-    labs(x="Mean hybridicity", y="")+
+    labs(x="hHe-mean", y="")+
     theme_classic(base_size=12)+
     theme(legend.position = "none")
 
@@ -341,7 +337,7 @@ HxA <- ggplot(res.dfA, aes(x=Hx_Estimate, y=Domain, colour=Domain))+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
-    labs(x="Mean hybridicty", y="")+
+    labs(x="hHe-mean", y="")+
     theme_classic(base_size=12)+
     theme(legend.position = "none")
 
@@ -391,9 +387,12 @@ yearA <- ggplot(res.dfA, aes(x=year_Estimate, y=Domain, colour=Domain))+
     theme(legend.position = "none")
 
 
-Fig2 <- plot_grid(genJ, genA, HeJ, HeA, HxJ, HxA, HIHeJ,HIHeA,spaJ, spaA, yearJ, yearA, labels="auto", ncol=2)
+Fig2 <- plot_grid(genJ, HeJ, HxJ, HIHeJ,
+                  labels="auto", ncol=2)
 
-ggsave("fig/figure2.pdf", Fig2, width=170, height=220, units="mm", dpi=300)
+FigS2 <- plor(spaJ, spaA, yearJ, yearA) 
+
+ggsave("fig/figure2.pdf", Fig2, width=170, height=150, units="mm", dpi=300)
 
 
 ############## ending analysis here for now ##################
