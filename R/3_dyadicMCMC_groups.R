@@ -49,9 +49,6 @@ data.dyad <- readRDS("tmp/data.dyad.RDS")
 
 names(data.dyad)
 
-ggplot(data.dyad, aes(x=Microbiome_similarity))+
-    geom_histogram()
-
 ## 1) Distances for bacteria
 jac_bac <- as.matrix(phyloseq::distance(Bac, method="jaccard", type="samples", binary=T))
 jac_bac[is.na(jac_bac)] <- 0 # defining those as 0 distances
@@ -179,11 +176,12 @@ modelFB_A<-brm(ait_bac~1+ ait_fun+
                inits=0)
 saveRDS(modelFB_A, "tmp/BRMmodelFB_A.rds")
 #
+
 modelFB_J<-brm(jac_bac~1+ jac_fun+
                 (1|mm(IDA,IDB)),
                 data = data.dyad,
                 family= "gaussian",
-                warmup = 1000, iter = 6000,
+                warmup = 1000, iter = 3000,
                 cores = 20, chains = 4,
                inits=0)
 saveRDS(modelFB_J, "tmp/BRMmodelFB_J.rds")
@@ -201,7 +199,6 @@ modelJ_diet <- readRDS("tmp/BRMmodelJ_diet.rds")
 modelA_diet <- readRDS("tmp/BRMmodelA_diet.rds")
 modelA_para <- readRDS("tmp/BRMmodelA_para.rds")
 modelJ_para <- readRDS("tmp/BRMmodelJ_para.rds")
-
 modelJ_bac <- readRDS("tmp/BRMmodelJ_bac.rds")
 modelA_bac <- readRDS("tmp/BRMmodelA_bac.rds")
 
@@ -231,30 +228,27 @@ resdf.fun<- function(model1_para, name, ASV){
 }
 
 res.df <-resdf.fun(modelJ_para, "Parasite", 11)
-
-#res.df <- rbind(res.df, resdf.fun(modelJ_bac, "Bacteria", 383))
+res.df <- rbind(res.df, resdf.fun(modelJ_bac, "Bacteria", 383))
 res.df <- rbind(res.df, resdf.fun(modelJ_diet, "Diet", 45))
 res.df <- rbind(res.df, resdf.fun(modelJ_fun, "Fungi", 65))
-#res.df <- rbind(res.df, resdf.fun(modelJ, "Full model", 588))
-#res.df$Domain <- factor(res.df$Domain, level=c("Bacteria", "Diet", "Parasite", "Fungi", "Full model"))
-res.df$Domain <- factor(res.df$Domain, level=c("Diet", "Parasite", "Fungi"))
+res.df <- rbind(res.df, resdf.fun(modelJ, "Full model", 588))
+res.df$Domain <- factor(res.df$Domain, level=c( "Diet", "Bacteria","Parasite", "Fungi", "Full model"))
 
 res.dfA <-resdf.fun(modelA_para, "Parasite", 11)
-#res.dfA <- rbind(res.dfA, resdf.fun(modelA_bac, "Bacteria", 383))
+res.dfA <- rbind(res.dfA, resdf.fun(modelA_bac, "Bacteria", 383))
 res.dfA <- rbind(res.dfA, resdf.fun(modelA_diet, "Diet", 45))
 res.dfA <- rbind(res.dfA, resdf.fun(modelA_fun, "Fungi", 65))
-#res.dfA <- rbind(res.dfA, resdf.fun(modelA, "Full model", 588))
-#res.dfA$Domain <- factor(res.dfA$Domain, level=c("Bacteria", "Diet", "Parasite", "Fungi", "Full model"))
-res.dfA$Domain <- factor(res.dfA$Domain, level=c("Diet", "Parasite", "Fungi"))
+res.dfA <- rbind(res.dfA, resdf.fun(modelA, "Full model", 588))
+res.dfA$Domain <- factor(res.dfA$Domain, level=c( "Diet", "Bacteria", "Parasite", "Fungi", "Full model"))
 
 coul <- c("#136f63", "#032b43", "#3f88c5", "#ffba08", "#d00000")
 
 genJ <- ggplot(res.df, aes(x=HI_Estimate, y=Domain, colour=Domain))+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=1)+
     geom_errorbar(aes(xmin=HI_lCI, xmax=HI_uCI, colour=Domain),
                   size=1, width=0.4)+
     geom_point(size=3)+
-    geom_vline(xintercept=0, linetype="dashed", linewidth=1.5)+
-    scale_x_reverse()+
+#    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
     labs(x="Genetic distance", y="")+
@@ -262,11 +256,11 @@ genJ <- ggplot(res.df, aes(x=HI_Estimate, y=Domain, colour=Domain))+
     theme(legend.position = "none")
 
 genA <- ggplot(res.dfA, aes(x=HI_Estimate, y=Domain, colour=Domain))+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=1)+
     geom_errorbar(aes(xmin=HI_lCI, xmax=HI_uCI, colour=Domain),
                   size=1, width=0.4)+
     geom_point(size=3)+
-    geom_vline(xintercept=0, linetype="dashed", linewidth=1.5)+
-    scale_x_reverse()+
+#    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
     labs(x="Genetic distance", y="")+
@@ -274,82 +268,82 @@ genA <- ggplot(res.dfA, aes(x=HI_Estimate, y=Domain, colour=Domain))+
     theme(legend.position = "none")
 
 HeJ <- ggplot(res.df, aes(x=He_Estimate, y=Domain, colour=Domain))+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=1)+
     geom_errorbar(aes(xmin=He_lCI, xmax=He_uCI, colour=Domain),
                   size=1, width=0.4)+
     geom_point(size=3)+
-    geom_vline(xintercept=0, linetype="dashed", linewidth=1.5)+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
-    labs(x="Expected heterozygousity distance (He-dist)", y="")+
+    labs(x="hHe-dist", y="")+
     theme_classic(base_size=12)+
     theme(legend.position = "none")
 
 HeA <- ggplot(res.dfA, aes(x=He_Estimate, y=Domain, colour=Domain))+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=1)+
     geom_errorbar(aes(xmin=He_lCI, xmax=He_uCI, colour=Domain),
                   size=1, width=0.4)+
     geom_point(size=3)+
-    geom_vline(xintercept=0, linetype="dashed", linewidth=1.5)+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
-    labs(x="Expected heterozygousity distance (He-dist)", y="")+
+    labs(x="hHe-dist", y="")+
     theme_classic(base_size=12)+
     theme(legend.position = "none")
 
 HIHeJ <- ggplot(res.df, aes(x=HI_He_Estimate, y=Domain, colour=Domain))+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=1)+
     geom_errorbar(aes(xmin=HI_He_lCI, xmax=HI_He_uCI, colour=Domain),
                   size=1, width=0.4)+
     geom_point(size=3)+
-    geom_vline(xintercept=0, linetype="dashed", linewidth=1.5)+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
-    labs(x="genetic distance: He-dist", y="")+
+    labs(x="genetic distance: hHe-dist", y="")+
     theme_classic(base_size=12)+
     theme(legend.position = "none")
 
 HIHeA <- ggplot(res.dfA, aes(x=HI_He_Estimate, y=Domain, colour=Domain))+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=1)+
     geom_errorbar(aes(xmin=HI_He_lCI, xmax=HI_He_uCI, colour=Domain),
                   size=1, width=0.4)+
     geom_point(size=3)+
-    geom_vline(xintercept=0, linetype="dashed", linewidth=1.5)+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
-    labs(x="genetic distance: He-dist", y="")+
+    labs(x="genetic distance: hHe-dist", y="")+
     theme_classic(base_size=12)+
     theme(legend.position = "none")
 
 HxJ <- ggplot(res.df, aes(x=Hx_Estimate, y=Domain, colour=Domain))+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=1)+
     geom_errorbar(aes(xmin=Hx_lCI, xmax=Hx_uCI, colour=Domain),
                   size=1, width=0.4)+
     geom_point(size=3)+
-    geom_vline(xintercept=0, linetype="dashed", linewidth=1.5)+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
-    labs(x="Mean hybridicity", y="")+
+    labs(x="hHe-mean", y="")+
     theme_classic(base_size=12)+
     theme(legend.position = "none")
 
 HxA <- ggplot(res.dfA, aes(x=Hx_Estimate, y=Domain, colour=Domain))+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=1)+
     geom_errorbar(aes(xmin=Hx_lCI, xmax=Hx_uCI, colour=Domain),
                   size=1, width=0.4)+
     geom_point(size=3)+
-    geom_vline(xintercept=0, linetype="dashed", linewidth=1.5)+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
-    labs(x="Mean hybridicty", y="")+
+    labs(x="hHe-mean", y="")+
     theme_classic(base_size=12)+
     theme(legend.position = "none")
 
 spaJ <- ggplot(res.df, aes(x=spatial_Estimate, y=Domain, colour=Domain))+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=1)+
     geom_errorbar(aes(xmin=spatial_lCI, xmax=spatial_uCI, colour=Domain),
                   size=1, width=0.4)+
     geom_point(size=3)+
-    geom_vline(xintercept=0, linetype="dashed", linewidth=1.5)+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
@@ -357,10 +351,10 @@ spaJ <- ggplot(res.df, aes(x=spatial_Estimate, y=Domain, colour=Domain))+
     theme_classic(base_size=12)+
     theme(legend.position = "none")
 spaA <- ggplot(res.dfA, aes(x=spatial_Estimate, y=Domain, colour=Domain))+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=1)+
     geom_errorbar(aes(xmin=spatial_lCI, xmax=spatial_uCI, colour=Domain),
                   size=1, width=0.4)+
     geom_point(size=3)+
-    geom_vline(xintercept=0, linetype="dashed", linewidth=1.5)+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
@@ -368,10 +362,10 @@ spaA <- ggplot(res.dfA, aes(x=spatial_Estimate, y=Domain, colour=Domain))+
     theme_classic(base_size=12)+
     theme(legend.position = "none")
 yearJ <- ggplot(res.df, aes(x=year_Estimate, y=Domain, colour=Domain))+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=1)+
     geom_errorbar(aes(xmin=year_lCI, xmax=year_uCI, colour=Domain),
                   size=1, width=0.4)+
     geom_point(size=3)+
-    geom_vline(xintercept=0, linetype="dashed", linewidth=1.5)+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
@@ -379,10 +373,10 @@ yearJ <- ggplot(res.df, aes(x=year_Estimate, y=Domain, colour=Domain))+
     theme_classic(base_size=12)+
     theme(legend.position = "none")
 yearA <- ggplot(res.dfA, aes(x=year_Estimate, y=Domain, colour=Domain))+
+        geom_vline(xintercept=0, linetype="dashed", linewidth=1)+
     geom_errorbar(aes(xmin=year_lCI, xmax=year_uCI, colour=Domain),
                   size=1, width=0.4)+
     geom_point(size=3)+
-    geom_vline(xintercept=0, linetype="dashed", linewidth=1.5)+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
@@ -391,12 +385,222 @@ yearA <- ggplot(res.dfA, aes(x=year_Estimate, y=Domain, colour=Domain))+
     theme(legend.position = "none")
 
 
-Fig2 <- plot_grid(genJ, genA, HeJ, HeA, HxJ, HxA, HIHeJ,HIHeA,spaJ, spaA, yearJ, yearA, labels="auto", ncol=2)
+Fig2 <- plot_grid(genJ, HeJ, HxJ, HIHeJ,
+                  labels="auto", ncol=2)
 
-ggsave("fig/figure2.pdf", Fig2, width=170, height=220, units="mm", dpi=300)
+FigS2 <- plot_grid(spaJ, spaA, yearJ, yearA, labels="auto") 
+
+ggsave("fig/figure2.pdf", Fig2, width=170, height=120, units="mm", dpi=300)
 
 
 ############## ending analysis here for now ##################
+
+## Figure 3: interaction of genetic
+
+pp_check(modelA) # fine
+
+# model convergence for jaccard
+modelJ_transformed <- ggs(modelJ)
+
+cat <- filter(modelJ_transformed, Parameter %in% c("b_Intercept", "b_spatial", "b_HI", "b_He", "b_Hx", "b_year", "b_HI:He"))
+par <- c("Intercept", "Spatial distance","genetic distances", "hHe-dist", "hHe-mean", "Year distance",
+         "Genetic distance*hHe-dist")
+names(par) <- (unique(modelJ_transformed$Parameter))[1:7]
+
+caterpillar <- ggplot(filter(modelJ_transformed, Parameter %in% c("b_Intercept", "b_spatial", "b_locality1", "b_HI", "b_He", "b_Hx", "b_year", "b_HI:He")),
+       aes(x   = Iteration,
+           y   = value,
+           col = as.factor(Chain)))+
+    geom_line() +
+    geom_vline(xintercept = 1000)+
+        scale_color_brewer(palette="Dark2")+
+        facet_grid(Parameter ~ . ,
+                      scale  = 'free_y',
+                   switch = 'y',
+                   labeller=as_labeller(par))+
+            labs(title = "Caterpillar Plots",
+                 col   = "Chains")+
+    theme_bw(base_size=10)+
+    theme(
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        legend.position = "right"
+    )
+
+#ggsave("fig/figureS1_caterpillar.pdf", caterpillar, width=170, height=250, units="mm", dpi=300)
+
+
+modelA_fun
+
+newdata0 <- data.frame(He=seq_range(0:1, n=51),
+                       year=rep(0, n=51),
+                       HI=rep(0.1, n=51),
+                       Hx=rep(median(data.dyad$Hx), n=51),
+                       IDA=rep("AA_0197", 51),
+                       IDB=rep("AA_0089", 51),
+                       spatial=rep(median(data.dyad$spatial)))
+
+newdata0.5 <- data.frame(He=seq_range(0:1, n=51),
+                       year=rep(0, n=51),
+                       HI=rep(0.5, n=51),
+                       Hx=rep(median(data.dyad$Hx), n=51),
+                       IDA=rep("AA_0197", 51),
+                       IDB=rep("AA_0089", 51),
+                       spatial=rep(median(data.dyad$spatial)))
+
+newdata1 <- data.frame(He=seq_range(0:1, n=51),
+                       year=rep(0, n=51),
+                       HI=rep(0.9, n=51),
+                       Hx=rep(median(data.dyad$Hx), n=51),
+                       IDA=rep("AA_0197", 51),
+                       IDB=rep("AA_0089", 51),
+                       spatial=rep(median(data.dyad$spatial)))
+
+pred.df0 <- add_epred_draws(newdata0, modelA)
+gen0 <- ggplot(pred.df0, aes(x=He, y=.epred))+
+    stat_lineribbon(size=0.5, .width=c(.95, .8, .5), alpha=0.5) +
+#    scale_fill_manual(values=microshades_palette("micro_purple"))+
+                ylab("Gut community similarity")+
+    xlab("He")+
+    xlim(min(data.dyad$He[data.dyad$HI<0.1]), max(data.dyad$He[data.dyad$HI<0.1]))+
+                labs(fill="level:")+
+                ggtitle("Genetic distance = 0.1")+
+                theme_bw(base_size=12)
+
+pred.df5 <- add_epred_draws(newdata0.5, modelA)
+gen5 <-ggplot(pred.df5, aes(x=He, y=.epred))+
+    stat_lineribbon(size=0.5, .width=c(.95, .8, .5), alpha=0.5) +
+#    scale_fill_manual(values=microshades_palette("micro_purple"))+
+                ylab("Gut community similarity")+
+                xlab("He")+
+                labs(fill="level:")+
+                ggtitle("Genetic distance = 0.5")+
+                theme_bw(base_size=12)
+
+
+pred.df1 <- add_epred_draws(newdata1, modelA)
+gen1 <-ggplot(pred.df1, aes(x=He, y=.epred))+
+    stat_lineribbon(size=0.5, .width=c(.95, .8, .5), alpha=0.5) +
+#    scale_fill_manual(values=microshades_palette("micro_purple"))+
+                ylab("Gut community similarity")+
+    xlab("He")+
+    xlim(min(data.dyad$He[data.dyad$HI>0.9]), max(data.dyad$He[data.dyad$HI>0.9]))+
+                labs(fill="level:")+
+                ggtitle("Genetic distance = 0.9")+
+                theme_bw(base_size=12)
+
+predF0 <- add_epred_draws(newdata0, modelA_fun)
+genF0 <- ggplot(predF0, aes(x=He, y=.epred))+
+    stat_lineribbon(size=0.5, .width=c(.95, .8, .5), alpha=0.5) +
+#    scale_fill_manual(values=microshades_palette("micro_purple"))+
+                ylab("Gut community similarity")+
+    xlab("He")+
+    xlim(min(data.dyad$He[data.dyad$HI<0.1]), max(data.dyad$He[data.dyad$HI<0.1]))+
+                labs(fill="level:")+
+                ggtitle("Genetic distance = 0.1")+
+                theme_bw(base_size=12)
+
+predF5 <- add_epred_draws(newdata0.5, modelA_fun)
+genF5 <-ggplot(predF5, aes(x=He, y=.epred))+
+    stat_lineribbon(size=0.5, .width=c(.95, .8, .5), alpha=0.5) +
+#    scale_fill_manual(values=microshades_palette("micro_purple"))+
+                ylab("Gut community similarity")+
+                xlab("He")+
+                labs(fill="level:")+
+                ggtitle("Genetic distance = 0.5")+
+                theme_bw(base_size=12)
+
+
+predF1 <- add_epred_draws(newdata1, modelA_fun)
+genF1 <-ggplot(predF1, aes(x=He, y=.epred))+
+    stat_lineribbon(size=0.5, .width=c(.95, .8, .5), alpha=0.5) +
+#    scale_fill_manual(values=microshades_palette("micro_purple"))+
+                ylab("Gut community similarity")+
+    xlab("He")+
+    xlim(min(data.dyad$He[data.dyad$HI>0.9]), max(data.dyad$He[data.dyad$HI>0.9]))+
+                labs(fill="level:")+
+                ggtitle("Genetic distance = 0.9")+
+                theme_bw(base_size=12)
+
+All <- plot_grid(gen0, gen5, gen1, labels="auto", rel_widths=c(0.4,1,0.4), nrow=1)
+Fun <- plot_grid(genF0, genF5, genF1, labels=c("d", "e", "f"), rel_widths=c(0.4,1,0.4), nrow=1)
+
+Fig3 <- plot_grid(All, Fun, ncol=1)
+
+ggplot2::ggsave(file="fig/Fig3.pdf", Fig3, width = 190, height = 170, dpi = 300, units="mm")
+
+############### Fungi
+
+newdata0 <- data.frame(He=seq_range(0:1, n=51),
+                       year=rep(0, n=51),
+                       HI=rep(0.1, n=51),
+                       Hx=rep(median(data.dyad$Hx), n=51),
+                       IDA=rep("AA_0197", 51),
+                       IDB=rep("AA_0089", 51),
+                       spatial=rep(median(data.dyad$spatial)))
+
+pred.df0 <- add_epred_draws(newdata0, modelA_fun)
+
+gen_pred0 <-ggplot(data.dyad, aes(x=He, y=ait_fun))+
+    geom_jitter(width=0.01, shape=21, size=1, colour="gray", alpha=0.7)+
+    stat_lineribbon(data=pred.df0, aes(y = .epred),
+                    size=0.5, .width=c(.95, .8, .5), alpha=0.5) +
+#    scale_fill_manual(values=microshades_palette("micro_purple"))+
+                ylab("Gut community similarity")+
+    xlab("He")+
+    xlim(min(data.dyad$He[data.dyad$HI<0.1]), max(data.dyad$He[data.dyad$HI<0.1]))+
+                labs(fill="level:")+
+                ggtitle("Genetic distance = 0.1")+
+                theme_bw(base_size=12)
+
+gen_pred0
+
+
+newdata0.5 <- data.frame(He=seq_range(0:1, n=51),
+                       year=rep(0, n=51),
+                       HI=rep(0.5, n=51),
+                       Hx=rep(median(data.dyad$Hx), n=51),
+                       IDA=rep("AA_0197", 51),
+                       IDB=rep("AA_0089", 51),
+                       spatial=rep(median(data.dyad$spatial)))
+
+pred.df5 <- add_epred_draws(newdata0.5, modelA_fun)
+gen_pred0.5 <-ggplot(data.dyad, aes(x=He, y=Microbiome_similarit))+
+    geom_jitter(width=0.01, shape=21, size=1, colour="gray", alpha=0.7)+
+    stat_lineribbon(data=pred.df5, aes(y = .epred),
+                    size=0.5, .width=c(.95, .8, .5), alpha=0.5) +
+#    scale_fill_manual(values=microshades_palette("micro_purple"))+
+                ylab("Gut community similarity")+
+                xlab("He")+
+                labs(fill="level:")+
+                ggtitle("Genetic distance = 0.5")+
+                theme_bw(base_size=12)
+
+newdata1 <- data.frame(He=seq_range(0:1, n=51),
+                       year=rep(0, n=51),
+                       HI=rep(1, n=51),
+                       Hx=rep(median(data.dyad$Hx), n=51),
+                       IDA=rep("AA_0197", 51),
+                       IDB=rep("AA_0089", 51),
+                       spatial=rep(median(data.dyad$spatial)))
+
+pred.df1 <- add_epred_draws(newdata1, modelA_fun)
+
+gen_pred1 <-ggplot(data.dyad, aes(x=He, y=ait_fun))+
+    geom_jitter(width=0.01, shape=21, size=1, colour="gray", alpha=0.7)+
+    stat_lineribbon(data=pred.df1, aes(y = .epred),
+                    size=0.5, .width=c(.95, .8, .5), alpha=0.5) +
+#    scale_fill_manual(values=microshades_palette("micro_purple"))+
+                ylab("Gut community similarity")+
+    xlab("He")+
+    xlim(min(data.dyad$He[data.dyad$HI>0.9]), max(data.dyad$He[data.dyad$HI>0.9]))+
+                labs(fill="level:")+
+                ggtitle("Genetic distance = 0.5")+
+                theme_bw(base_size=12)
+
+gen_pred1
 
 ############################################################################################
 ######## Decomposing the Fungi model
@@ -683,7 +887,7 @@ Fig4 <- plot_grid(fig4, legend, rel_heights=c(0.8, 0.02), ncol=1)
 Fig4
 
 
-ggplot2::ggsave(file="fig/Fig4.pdf", Fig4, width = 230, height = 180, dpi = 300, units="mm")
+ggplot2::ggsave(file="fig/Fig4.pdf", Fig4, width = 230, height = 180, dpi = 300, units="mm")w
 
 ## Let's model
 newdata0 <- data.frame(hi=seq_range(data.dyad$hi, n=51),
