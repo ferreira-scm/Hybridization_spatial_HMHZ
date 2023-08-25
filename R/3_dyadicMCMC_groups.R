@@ -167,17 +167,17 @@ saveRDS(modelA_fun, "tmp/BRMmodelA_fun.rds")
 
 ############ effect of fungi on bacterial community
 
-modelFB_A<-brm(ait_bac~1+ ait_fun+
+modelFB_A<-brm(ait_bac~1+ ait_fun + spatial+HI*He+Hx+year+
                 (1|mm(IDA,IDB)),
                 data = data.dyad,
                 family= "gaussian",
-                warmup = 1000, iter = 6000,
+                warmup = 1000, iter = 3000,
                 cores = 20, chains = 4,
                inits=0)
 saveRDS(modelFB_A, "tmp/BRMmodelFB_A.rds")
 #
 
-modelFB_J<-brm(jac_bac~1+ jac_fun+
+modelFB_J<-brm(jac_bac~1+ jac_fun + spatial+HI*He+Hx+year+
                 (1|mm(IDA,IDB)),
                 data = data.dyad,
                 family= "gaussian",
@@ -201,6 +201,18 @@ modelA_para <- readRDS("tmp/BRMmodelA_para.rds")
 modelJ_para <- readRDS("tmp/BRMmodelJ_para.rds")
 modelJ_bac <- readRDS("tmp/BRMmodelJ_bac.rds")
 modelA_bac <- readRDS("tmp/BRMmodelA_bac.rds")
+
+modelFB_J <- readRDS("tmp/BRMmodelFB_J.rds")
+modelFB_A <- readRDS("tmp/BRMmodelFB_A.rds")
+
+
+library(sjPlot)
+
+plot_model(modelFB_J, type = "pred", terms = "jac_fun")
+
+plot_model(modelFB_A, type = "pred", terms = "ait_fun")
+
+posterior_predict(modelFB_J, resp="jac_fun")
 
 resdf.fun<- function(model1_para, name, ASV){
     para <- summary(model1_para)$fixed
@@ -462,22 +474,24 @@ pred.df0 <- add_epred_draws(newdata0, modelA)
 gen0 <- ggplot(pred.df0, aes(x=He, y=.epred))+
     stat_lineribbon(size=0.5, .width=c(.95, .8, .5), alpha=0.5) +
 #    scale_fill_manual(values=microshades_palette("micro_purple"))+
-                ylab("Gut community similarity")+
+    ylab("Gut community similarity")+
     xlab("He")+
+    ylim(-2.1, -1.84)+
     xlim(min(data.dyad$He[data.dyad$HI<0.1]), max(data.dyad$He[data.dyad$HI<0.1]))+
                 labs(fill="level:")+
                 ggtitle("Genetic distance = 0.1")+
-                theme_bw(base_size=12)
+                theme_bw(base_size=10)
 
 pred.df5 <- add_epred_draws(newdata0.5, modelA)
 gen5 <-ggplot(pred.df5, aes(x=He, y=.epred))+
     stat_lineribbon(size=0.5, .width=c(.95, .8, .5), alpha=0.5) +
 #    scale_fill_manual(values=microshades_palette("micro_purple"))+
                 ylab("Gut community similarity")+
-                xlab("He")+
-                labs(fill="level:")+
-                ggtitle("Genetic distance = 0.5")+
-                theme_bw(base_size=12)
+    xlab("He")+
+    ylim(-2.1, -1.84)+
+    labs(fill="level:")+
+    ggtitle("Genetic distance = 0.5")+
+    theme_bw(base_size=10)
 
 
 pred.df1 <- add_epred_draws(newdata1, modelA)
@@ -486,10 +500,11 @@ gen1 <-ggplot(pred.df1, aes(x=He, y=.epred))+
 #    scale_fill_manual(values=microshades_palette("micro_purple"))+
                 ylab("Gut community similarity")+
     xlab("He")+
+    ylim(-2.1, -1.84)+
     xlim(min(data.dyad$He[data.dyad$HI>0.9]), max(data.dyad$He[data.dyad$HI>0.9]))+
                 labs(fill="level:")+
                 ggtitle("Genetic distance = 0.9")+
-                theme_bw(base_size=12)
+    theme_bw(base_size=10)
 
 predF0 <- add_epred_draws(newdata0, modelA_fun)
 genF0 <- ggplot(predF0, aes(x=He, y=.epred))+
@@ -497,20 +512,22 @@ genF0 <- ggplot(predF0, aes(x=He, y=.epred))+
 #    scale_fill_manual(values=microshades_palette("micro_purple"))+
                 ylab("Gut community similarity")+
     xlab("He")+
+    ylim(0.2231, 0.6060)+
     xlim(min(data.dyad$He[data.dyad$HI<0.1]), max(data.dyad$He[data.dyad$HI<0.1]))+
                 labs(fill="level:")+
                 ggtitle("Genetic distance = 0.1")+
-                theme_bw(base_size=12)
+                theme_bw(base_size=10)
 
 predF5 <- add_epred_draws(newdata0.5, modelA_fun)
 genF5 <-ggplot(predF5, aes(x=He, y=.epred))+
     stat_lineribbon(size=0.5, .width=c(.95, .8, .5), alpha=0.5) +
 #    scale_fill_manual(values=microshades_palette("micro_purple"))+
+    ylim(0.2231, 0.6060)+
                 ylab("Gut community similarity")+
                 xlab("He")+
                 labs(fill="level:")+
                 ggtitle("Genetic distance = 0.5")+
-                theme_bw(base_size=12)
+                theme_bw(base_size=10)
 
 
 predF1 <- add_epred_draws(newdata1, modelA_fun)
@@ -519,19 +536,55 @@ genF1 <-ggplot(predF1, aes(x=He, y=.epred))+
 #    scale_fill_manual(values=microshades_palette("micro_purple"))+
                 ylab("Gut community similarity")+
     xlab("He")+
+    ylim(0.2231, 0.6060)+
     xlim(min(data.dyad$He[data.dyad$HI>0.9]), max(data.dyad$He[data.dyad$HI>0.9]))+
                 labs(fill="level:")+
                 ggtitle("Genetic distance = 0.9")+
-                theme_bw(base_size=12)
+                theme_bw(base_size=10)
 
-All <- plot_grid(gen0, gen5, gen1, labels="auto", rel_widths=c(0.4,1,0.4), nrow=1)
-Fun <- plot_grid(genF0, genF5, genF1, labels=c("d", "e", "f"), rel_widths=c(0.4,1,0.4), nrow=1)
+All <- plot_grid(gen0, gen5, gen1, labels="auto", rel_widths=c(0.7,1,0.7), nrow=1)
+Fun <- plot_grid(genF0, genF5, genF1, labels=c("d", "e", "f"), rel_widths=c(0.7,1,0.7), nrow=1)
 
 Fig3 <- plot_grid(All, Fun, ncol=1)
 
-ggplot2::ggsave(file="fig/Fig3.pdf", Fig3, width = 190, height = 170, dpi = 300, units="mm")
+ggplot2::ggsave(file="fig/Fig3.pdf", Fig3, width = 220, height = 170, dpi = 300, units="mm")
 
-############### Fungi
+
+# plotting bacteria~fungi
+nd <- data.frame(jac_fun=seq_range(data.dyad$jac_fun, n=51),
+                       IDA=rep("AA_0197", 51),
+                       IDB=rep("AA_0089", 51))
+
+add_predicted_draws(nd, modelFB_J) %>%
+    ggplot(aes(x = jac_fun, y = jac_bac)) +
+    stat_lineribbon(aes(y = .prediction), .width = c(.95, .80, .50),  # regression line and CI
+                    alpha = 0.5, colour = "black") +
+    geom_jitter(data=data.dyad, colour = "black", size = 1, alpha=0.1)
+
+
+
+
+FB_J <- summary(modelFB_J)$fixed
+
+FB_J[1,] <- NA
+
+
+FB <- rbind(summary(modelFB_J)$fixed[2,], summary(modelFB_A)$fixed[2,])
+
+FB$Distance <- c("Jaccard", "Aitchison")
+
+names(FB)[3] <- "lCI"
+names(FB)[4] <- "uCI"
+
+ggplot(FB, aes(x=Estimate, y=Distance))+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=1)+
+    geom_errorbar(aes(xmin=lCI, xmax=uCI),
+                  size=1, width=0.4)+
+    geom_point(size=3)+
+    labs(x="Bacteria similarity", y="")+
+    theme_classic(base_size=12)+
+    theme(legend.position = "none")
+
 
 newdata0 <- data.frame(He=seq_range(0:1, n=51),
                        year=rep(0, n=51),
@@ -541,66 +594,6 @@ newdata0 <- data.frame(He=seq_range(0:1, n=51),
                        IDB=rep("AA_0089", 51),
                        spatial=rep(median(data.dyad$spatial)))
 
-pred.df0 <- add_epred_draws(newdata0, modelA_fun)
-
-gen_pred0 <-ggplot(data.dyad, aes(x=He, y=ait_fun))+
-    geom_jitter(width=0.01, shape=21, size=1, colour="gray", alpha=0.7)+
-    stat_lineribbon(data=pred.df0, aes(y = .epred),
-                    size=0.5, .width=c(.95, .8, .5), alpha=0.5) +
-#    scale_fill_manual(values=microshades_palette("micro_purple"))+
-                ylab("Gut community similarity")+
-    xlab("He")+
-    xlim(min(data.dyad$He[data.dyad$HI<0.1]), max(data.dyad$He[data.dyad$HI<0.1]))+
-                labs(fill="level:")+
-                ggtitle("Genetic distance = 0.1")+
-                theme_bw(base_size=12)
-
-gen_pred0
-
-
-newdata0.5 <- data.frame(He=seq_range(0:1, n=51),
-                       year=rep(0, n=51),
-                       HI=rep(0.5, n=51),
-                       Hx=rep(median(data.dyad$Hx), n=51),
-                       IDA=rep("AA_0197", 51),
-                       IDB=rep("AA_0089", 51),
-                       spatial=rep(median(data.dyad$spatial)))
-
-pred.df5 <- add_epred_draws(newdata0.5, modelA_fun)
-gen_pred0.5 <-ggplot(data.dyad, aes(x=He, y=Microbiome_similarit))+
-    geom_jitter(width=0.01, shape=21, size=1, colour="gray", alpha=0.7)+
-    stat_lineribbon(data=pred.df5, aes(y = .epred),
-                    size=0.5, .width=c(.95, .8, .5), alpha=0.5) +
-#    scale_fill_manual(values=microshades_palette("micro_purple"))+
-                ylab("Gut community similarity")+
-                xlab("He")+
-                labs(fill="level:")+
-                ggtitle("Genetic distance = 0.5")+
-                theme_bw(base_size=12)
-
-newdata1 <- data.frame(He=seq_range(0:1, n=51),
-                       year=rep(0, n=51),
-                       HI=rep(1, n=51),
-                       Hx=rep(median(data.dyad$Hx), n=51),
-                       IDA=rep("AA_0197", 51),
-                       IDB=rep("AA_0089", 51),
-                       spatial=rep(median(data.dyad$spatial)))
-
-pred.df1 <- add_epred_draws(newdata1, modelA_fun)
-
-gen_pred1 <-ggplot(data.dyad, aes(x=He, y=ait_fun))+
-    geom_jitter(width=0.01, shape=21, size=1, colour="gray", alpha=0.7)+
-    stat_lineribbon(data=pred.df1, aes(y = .epred),
-                    size=0.5, .width=c(.95, .8, .5), alpha=0.5) +
-#    scale_fill_manual(values=microshades_palette("micro_purple"))+
-                ylab("Gut community similarity")+
-    xlab("He")+
-    xlim(min(data.dyad$He[data.dyad$HI>0.9]), max(data.dyad$He[data.dyad$HI>0.9]))+
-                labs(fill="level:")+
-                ggtitle("Genetic distance = 0.5")+
-                theme_bw(base_size=12)
-
-gen_pred1
 
 ############################################################################################
 ######## Decomposing the Fungi model
