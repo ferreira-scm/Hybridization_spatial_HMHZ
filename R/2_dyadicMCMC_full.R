@@ -279,82 +279,7 @@ saveRDS(modelA, "tmp/BRMmodelA.rds")
 model1_aiS <- readRDS("tmp/BRMmodel1_aiS.rds")
 
 
-#model1<-brm(Microbiome_similarity~1+ spatial+locality+HI*He+year+BMI+sex+
-#                (1|mm(IDA,IDB)),
-#                data = data.dyad,
-#                family= "zero_inflated_beta",
-#                warmup = 1000, iter = 3000,
-#                cores = 20, chains = 4,
-#               inits=0)
-#model1 <- add_criterion(model1, "loo")
-#saveRDS(model1, "tmp/BRMmodel1.rds")
-#model1 <- readRDS("tmp/BRMmodel1.rds")
-model1S<-brm(Microbiome_similarity~1+ spatial+locality+HI*He+Hx+year+BMI+sex+
-                (1|mm(IDA,IDB)),
-                data = data.dyad,
-                family= "zero_inflated_beta",
-                warmup = 1000, iter = 3000,
-                cores = 20, chains = 4,
-               inits=0)
-model1S <- add_criterion(model1S, "loo")
-saveRDS(model1S, "tmp/BRMmodel1S.rds")
-model1S <- readRDS("tmp/BRMmodel1S.rds")
-
-#model1S2<-brm(Microbiome_similarity~1+ spatial+locality+HI+Hx+year+BMI+sex+
-#                (1|mm(IDA,IDB)),
-#                data = data.dyad,
-#                family= "gaussian",
-#                warmup = 1000, iter = 3000,
-#                cores = 20, chains = 4,
-#               inits=0)
-#model1S2 <- add_criterion(model1S2, "loo")
-#saveRDS(model1S2, "tmp/BRMmodel1S2.rds")
-model1S2 <- readRDS("tmp/BRMmodel1S2.rds")
-
-#model1_ai<-brm(Microbiome_similarity_ai~1+ spatial+locality+HI*He+year+BMI+sex+
-#                (1|mm(IDA,IDB)),
-#                data = data.dyad,
-#                family= "gaussian",
-#                warmup = 1000, iter = 3000,
-#                cores = 20, chains = 4,
-#               inits=0)
-#model1_ai <- add_criterion(model1_ai, "loo")
-#saveRDS(model1_ai, "tmp/BRMmodel1_ai.rds")
-model1_ai <- readRDS("tmp/BRMmodel1_ai.rds")
-
-model1_aiS<-brm(Microbiome_similarity_ai~1+ spatial+locality+HI*He+Hx+year+BMI+sex+
-                (1|mm(IDA,IDB)),
-                data = data.dyad,
-                family= "gaussian",
-                warmup = 1000, iter = 3000,
-                cores = 20, chains = 4,
-                inits=0)
-model1_aiS <- add_criterion(model1_aiS, "loo")
-saveRDS(model1_aiS, "tmp/BRMmodel1_aiS.rds")
-model1_aiS <- readRDS("tmp/BRMmodel1_aiS.rds")
-
-#model1_aiS2<-brm(Microbiome_similarity_ai~1+ spatial+locality+HI+Hx+year+BMI+sex+
-#                (1|mm(IDA,IDB)),
-#                data = data.dyad,
-#                family= "gaussian",
-#                warmup = 1000, iter = 3000,
-                cores = 20, chains = 4,
-#               inits=0)
-#model1_aiS2 <- add_criterion(model1_aiS2, "loo")
-#saveRDS(model1_aiS2, "tmp/BRMmodel1_aiS2.rds")
-model1_aiS2 <- readRDS("tmp/BRMmodel1_aiS2.rds")
-
-
-loo(model1)
-
-#mcmcglmm_model<-MCMCglmm(Microbiome_similarity~1+spatial+locality+HI+He+year+BMI+sex,
-#                            data=data.dyad,
-#                            family= "gaussian",
-#                            random =~ mm(IDA+IDB),
-#                            verbose=FALSE)
-mcmcglmm_model <- readRDS("tmp/mcmcglmm_model.rds")
-summary(mcmcglmm_model)
-
+# sanity check
 #mcmcglmm_model_ai<-MCMCglmm(Microbiome_similarity_chi~1+spatial+locality+HI+He+year+BMI+sex,
 #                            data=data.dyad,
 #                            family= "gaussian",
@@ -365,8 +290,10 @@ mcmcglmm_model_ai <- readRDS("tmp/mcmcglmm_model.rds")
 summary(mcmcglmm_model_chi)
 
 #Denisty overlay = # Compare distribution of response variable to distributions of a set of predicted response variable values based on model -- are they a good fit?
-#pp_check(model1) # fine
+#pp_check(modelA) # fine
+#pp_check(modelJ) # fine
 
+### to be updated and replotted###########
 # model convergence for jaccard
 model1_transformed <- ggs(model1)
 
