@@ -46,6 +46,7 @@ library("legendMap")
 library(sf)
 library(maps)
 library(scico)
+library("ggspatial")
 
 PS.TSS <- readRDS("tmp/PS.TSS_filtered.rds")
 
@@ -64,9 +65,10 @@ metadt <- sample_data(PS.TSS)
 
 metadt$He <- 2*(metadt$HI)*(1-metadt$HI)
 
-doData <- FALSE
+doData <- TRUE
 
 if(doData){
+
 ## 1) Jaccard distance for microbiome
 JACM <- as.matrix(phyloseq::distance(PS.TSS, method="jaccard", type="samples", binary=T))
 # transpose Jaccard disssimilary matrix to Jaccard similarty matrix
@@ -74,65 +76,46 @@ JACM <- 1-JACM
 # sanity check
 all(rownames(JACM)==key)
 jac <- c(as.dist(JACM))
+
 ## 2) Spatial distance matrix
 distance.df <- metadt[,c("Longitude", "Latitude")]
 spa <- c(dist(distance.df, method="euclidean"))
-## 3) Chisq distance for microbiome
-CHIM <- as.matrix(vegan::vegdist(PS.TSS@otu_table, method="chisq"))
-# transpose Chi square disssimilary matrix to similarty matrix
-CHIM <- 1-CHIM
-# sanity check
-all(rownames(CHIM)==key)
-chi <- c(as.dist(CHIM))
+
+## 3) Temporal (year) distance matrix
+#Transform dates into a numeric variable
+metadt$Year <- as.numeric(metadt$Year)
+tempm <- c(dist(metadt$Year))
+
 ## 4) Aitchison distance for microbiome
 AIM <- as.matrix(vegan::vegdist(PS.TSS@otu_table, method="aitchison", pseudocount=1))
 # transpose Aitchison disssimilary matrix to similarty matrix
 AIM <- 1-AIM
 ait <- c(as.dist(AIM))
-## 5) Sex pairs
-Sex_frame<-metadt[,c("Mouse_ID","Sex")]
-Sex_frame$Mouse_ID<-as.character(Sex_frame$Mouse_ID)
-Sex_frame$Sex<-as.character(Sex_frame$Sex)
-SEXM<-array(as.character(NA),c(nrow(Sex_frame),nrow(Sex_frame)))
-for(i in 1:nrow(Sex_frame)){
-    for(j in 1:nrow(Sex_frame)){
-        if(Sex_frame$Sex[i]=="F" & Sex_frame$Sex[i]==Sex_frame$Sex[j]){
-            SEXM[i,j]= "FF"}
-        if(Sex_frame$Sex[i]=="M" & Sex_frame$Sex[i]==Sex_frame$Sex[j]){
-           SEXM[i,j]= "MM"}
-        if( Sex_frame$Sex[i]!=Sex_frame$Sex[j]){
-            SEXM[i,j]= "FM"}
-    }
-}
-sex<-c(SEXM[lower.tri(SEXM)])
-# 6) Making BMI distances
-bmi <- c(dist(metadt$BMI))
-# 7) Create farm/Locality matrix: 
-Loc_frame<-metadt[,c("Mouse_ID","Locality")]
-LocM<-array(0,c(nrow(Loc_frame),nrow(Loc_frame)))
-for(i in 1:nrow(Loc_frame)){
-    for(j in 1:nrow(Loc_frame)){
-        if(Loc_frame$Locality[i]==Loc_frame$Locality[j]){
-            LocM[i,j]= "1"
-        } else{
-            LocM[i,j]= "0"
-        }
-    }
-}
-all(rownames(LocM)==key$ID)
-loc <- as.character(c(as.dist(LocM)))
-# 8) this matrix will describe the distance in years between samples
-#Transform dates into a numeric variable
-metadt$Year <- as.numeric(metadt$Year)
-tempm <- c(dist(metadt$Year))
-# 9) Making HI distances
+
+## 5) Making HI distances
 HIM <- c(dist(metadt$HI))
-#10) Making HE distances
-HeM <- c(dist(metadt$He))
+
+## 6) Making HE distances
+He <- c(dist(metadt$He))
+
+## 7) Making Hx distances
+#Create data frame with each sample name (character) and sampling time (numeric)
+hx_frame<-metadt[,c("Mouse_ID", "HI")]
+#Create an empty matrix to fill with distances
+hxM<-array(0,c(nrow(metadt),nrow(metadt)))
+#Derive matrix with time distances between each sample using abs()-function
+for (i in 1:nrow(metadt)){
+    for (j in 1:nrow(metadt))
+    {hxM[i,j]=abs(metadt$He[i] + metadt$He[j])
+    }
+}
+dimnames(hxM) <- c(key, key)
+Hx <- c(as.dist(hxM))
+
 
 #Combine these vectors into a data frame
-data.dyad<-data.frame(BMI=bmi,Microbiome_similarity=jac,spatial=spa, locality=loc, HI=HIM, He=HeM, year=tempm, sex=sex, Microbiome_similarity_chi=chi, Microbiome_similarity_ai=ait)
-data.dyad$locality <- as.factor(data.dyad$locality)
+data.dyad<-data.frame(Microbiome_similarity=jac,spatial=spa, HI=HIM, He=He, Hx=Hx, year=tempm, Microbiome_similarity_ai=ait)
+
 #Now all we need to do is add the identities of both individuals in each dyad as separate columns into the data frame and exclude self-comparisons (as these are not meaningful).
 # extracting Individual-combinations present in the matrices
 list<-expand.grid(key$ID, key$ID)
@@ -149,12 +132,10 @@ data.dyad$IDA<-list$Var2
 data.dyad$IDB<-list$Var1
 # Make sure you have got rid of all self comparisons
 data.dyad<-data.dyad[which(data.dyad$IDA!=data.dyad$IDB),]
-## sex combination into a factor
-data.dyad$sex <- factor(data.dyad$sex, levels=c("MM", "FM", "FF"))
 #scale all predictors to range between 0-1 if they are not already naturally on that scale
 #define scaling function:
     range.use <- function(x,min.use,max.use){ (x - min(x,na.rm=T))/(max(x,na.rm=T)-min(x,na.rm=T)) * (max.use - min.use) + min.use }
-scalecols<-c("spatial","He", "BMI", "year")
+scalecols<-c("spatial","He", "year")
 for(i in 1:ncol(data.dyad[,which(colnames(data.dyad)%in%scalecols)])){
     data.dyad[,which(colnames(data.dyad)%in%scalecols)][,i]<-range.use(data.dyad[,which(colnames(data.dyad)%in%scalecols)][,i],0,1)
     }
@@ -178,7 +159,7 @@ coordf <- data.frame(Lon=metadf$Longitude, Lat=metadf$Latitude)
 boundaries <- 
   st_read("tmp/VG250_Bundeslaender_esri.geojson")
 
-library("ggspatial")
+
 
 sampling <-
     ggplot(data=europe)+
@@ -194,7 +175,6 @@ sampling <-
     theme(panel.border = element_blank(), panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))+
   ggspatial::annotation_north_arrow(location = "tr")
-sampling
 
 hi_HI_dist <-ggplot(data = data.dyad, aes(x= HI, y= He))+
     geom_bin2d(bins=30)+
@@ -253,26 +233,25 @@ ggsave("fig/Figure1.pdf", Fig1, width=75, height=350, units="mm", dpi=300)
 ggsave("fig/Figure1_map.pdf", sampling, width=100, height=120, units="mm", dpi=300)
 
 ## Let's model
-#modelJ<-brm(Microbiome_similarity~1+ spatial+HI*He+Hx+year+
-#                (1|mm(IDA,IDB)),
-#                data = data.dyad,
-#                family= "zero_inflated_beta",
-#                warmup = 1000, iter = 3000,
-#                cores = 20, chains = 4,
-#               inits=0)
-#modelJ <- add_criterion(modelJ, "loo")
-#saveRDS(modelJ, "tmp/BRMmodelJac.rds")
+modelJ<-brm(Microbiome_similarity~1+ spatial+HI*He+Hx+year+
+                (1|mm(IDA,IDB)),
+                data = data.dyad,
+                family= "zero_inflated_beta",
+                warmup = 1000, iter = 3000,
+                cores = 20, chains = 4,
+            inits=0)
+modelJ <- add_criterion(modelJ, "loo")
+saveRDS(modelJ, "tmp/BRMmodelJac.rds")
 modelJ <- readRDS("tmp/BRMmodelJac.rds")
-
-#modelA<-brm(Microbiome_similarity_ai~1+ spatial+HI*He+Hx+year+
-#                (1|mm(IDA,IDB)),
-#                data = data.dyad,
-#                family= "gaussian",
-#                warmup = 1000, iter = 6000,
-#                cores = 20, chains = 4,
-#                inits=0)
-#modelA <- add_criterion(modelA, "loo")
-#saveRDS(modelA, "tmp/BRMmodelA.rds")
+modelA<-brm(Microbiome_similarity_ai~1+ spatial+HI*He+Hx+year+
+                (1|mm(IDA,IDB)),
+                data = data.dyad,
+                family= "gaussian",
+                warmup = 1000, iter = 6000,
+                cores = 20, chains = 4,
+                inits=0)
+modelA <- add_criterion(modelA, "loo")
+saveRDS(modelA, "tmp/BRMmodelA.rds")
 modelA <- readRDS("tmp/BRMmodelA.rds")
 print(summary(modelA), digits=3) 
 
