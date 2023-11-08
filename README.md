@@ -14,6 +14,8 @@ Readjust genera names
 Merge ASVs into cASV that are likely from the same taxa:
 Co-occurrence networks with only positive edges of ASV abundace per genus. Merge ASVs that cluster together.
 
+final phyloseq object for further analysis is "tmp/PS.TSS_filtered.rds"
+
 R/2_dyadicMCMC_full.R --> prepare dyadic data and do distance-based model for all the taxa (full model) with brms.
 model checks
 plotting figure 1
