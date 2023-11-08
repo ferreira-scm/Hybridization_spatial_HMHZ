@@ -243,6 +243,7 @@ modelJ<-brm(Microbiome_similarity~1+ spatial+HI*He+Hx+year+
 modelJ <- add_criterion(modelJ, "loo")
 saveRDS(modelJ, "tmp/BRMmodelJac.rds")
 modelJ <- readRDS("tmp/BRMmodelJac.rds")
+
 modelA<-brm(Microbiome_similarity_ai~1+ spatial+HI*He+Hx+year+
                 (1|mm(IDA,IDB)),
                 data = data.dyad,

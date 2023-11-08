@@ -32,7 +32,7 @@ pargs <- list(rep.num=1000, seed=10010, ncores=90, thresh=0.05)
 #se.net <- spiec.easi(list(Bac, Euk), method="mb", pulsar.params=pargs)
 #t2 <- Sys.time()
 #t2-t1
-saveRDS(se.net, "tmp/se.fnet.rds")
+#saveRDS(se.net, "tmp/se.fnet.rds")
 
 se.net <- readRDS("tmp/se.fnet.rds")
 
@@ -53,12 +53,15 @@ diag(bm) <- 0
 #weights <- Matrix::summary(t(bm))[,3] # includes negative weights
 weights <- (1-Matrix::summary(t(bm))[,3])/2 # ort
 
-net <- adj2igraph(Matrix::drop0(getRefit(se.net)),
+weights
+
+net <- SpiecEasi::adj2igraph(Matrix::drop0(getRefit(se.net)),
                     edge.attr=list(weight=weights),
                     vertex.attr = list(name=net.ids))
 
-betaMat=as.matrix(symBeta(getOptBeta(se.net)))
+E(net)
 
+betaMat=as.matrix(symBeta(getOptBeta(se.net)))
 
 # we want positive edges to be green and negative to be red
 edges <- E(net)
@@ -77,10 +80,9 @@ for (e.index in 1:length(edges)){
 E(net)$color=edge.colors
 
 ### defining attributes
-#V(net10)$family=c(PS.f@tax <- table[,4], ARG.f@tax <- table[,3])
-#V(net10)$family2=c(PS.f@tax <- table[,4], ARG.f@tax <- table[,6])
 V(net)$type=c(rep("Bacteria", length(taxa_names(Bac))), rep("Eukaryote", length(taxa_names(Euk))))
 V(net)$genus=c(Bac@tax_table[,6], Euk@tax_table[,6])
+V(net)$family=c(Bac@tax_table[,5], Euk@tax_table[,5])
 V(net)$phylum=c(Bac@tax_table[,2], Euk@tax_table[,2])
 V(net)$domain=c(Bac@tax_table[,1], Euk@tax_table[,1])
 
@@ -95,7 +97,7 @@ hub.s <- hub_score(net)$vector
 V(net)$lab.hub <- ""
 
 
-V(net)$lab.hub[which(hub.s>0.3)] <- V(net)$genus[which(hub.s>0.3)]
+V(net)$lab.hub <- V(net)$genus
 
 V(net)$label.cex <- 0.5
 V(net)$label.dist <- 0
@@ -109,15 +111,16 @@ mc <- coul[as.numeric(as.factor(V(net)$phylum))]
 
 
 
-
-set.seed(1002)
 pdf("fig/Network_prev05.pdf",
-                width =15, height = 15)
+                width =10, height = 10)
+set.seed(1002)
 plot(net,
      layout=layout_with_fr(net),
      vertex.shape=V(net)$stype,
      vertex.label=V(net)$lab.hub,
-     vertex.size=as.integer(cut(hub.s, breaks=10))+2,
+     vertex.label.dist=0.4,
+     vertex.label.degree=-pi/2,
+     vertex.size=3,
      vertex.color=adjustcolor(mc,0.8),
      edge.width=as.integer(cut(E(net)$weight, breaks=6))/3,
      margin=c(0,1,0,0))
