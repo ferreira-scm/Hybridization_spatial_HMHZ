@@ -392,9 +392,9 @@ Fig2 <- plot_grid(genJ, genA, HeJ, HeA, HxJ, HxA,
 
 FigS1 <- plot_grid(spaJ, spaA, yearJ, yearA, labels="auto") 
 
-ggsave("fig/figure2.pdf", Fig2, width=85, height=180, units="mm", dpi=300)
+ggsave("fig/figure2.pdf", Fig2, width=170, height=180, units="mm", dpi=300)
 
-ggsave("fig/figureS1.pdf", FigS1, width=85, height=150, units="mm", dpi=300)
+ggsave("fig/figureS1.pdf", FigS1, width=170, height=150, units="mm", dpi=300)
 
 
 
@@ -500,7 +500,7 @@ Fun <- plot_grid(genF0, genF5, genF1, labels=c("d", "e", "f"), rel_widths=c(0.7,
 
 Fig3 <- plot_grid(All, Fun, ncol=1)
 
-ggplot2::ggsave(file="fig/Fig3.pdf", Fig3, width = 170, height = 170, dpi = 300, units="mm")
+ggplot2::ggsave(file="fig/Fig3.pdf", Fig3, width = 180, height = 170, dpi = 300, units="mm")
 
 ########################Figure 4 ab
 # plotting bacteria~fungi
