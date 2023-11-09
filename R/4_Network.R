@@ -38,6 +38,8 @@ se.net <- readRDS("tmp/se.fnet.rds")
 
 se.net$select$stars$summary # lambda path
 
+se.net$select
+
 # coding bacteria/eukaryote nodes
 dtype <- c(rep(1,ntaxa(Bac)), rep(2,ntaxa(Euk)))
 

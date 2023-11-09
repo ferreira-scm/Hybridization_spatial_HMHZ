@@ -387,12 +387,15 @@ yearA <- ggplot(res.dfA, aes(x=year_Estimate, y=Domain, colour=Domain))+
     theme(legend.position = "none")
 
 
-Fig2 <- plot_grid(genJ, HeJ, HxJ, HIHeJ,
+Fig2 <- plot_grid(genJ, genA, HeJ, HeA, HxJ, HxA,
                   labels="auto", ncol=2)
 
-FigS2 <- plot_grid(spaJ, spaA, yearJ, yearA, labels="auto") 
+FigS1 <- plot_grid(spaJ, spaA, yearJ, yearA, labels="auto") 
 
-ggsave("fig/figure2.pdf", Fig2, width=170, height=120, units="mm", dpi=300)
+ggsave("fig/figure2.pdf", Fig2, width=85, height=180, units="mm", dpi=300)
+
+ggsave("fig/figureS1.pdf", FigS1, width=85, height=150, units="mm", dpi=300)
+
 
 
 ######################## Figure 3: interaction
