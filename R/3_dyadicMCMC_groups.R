@@ -1,40 +1,13 @@
 # This script follows the super cool approach from Aura Raulo
 # https://github.com/nuorenarra/Analysing-dyadic-data-with-brms/blob/main/R_Making_dyadic_data/DYADIC_workshop_data_wrangling.Rmd
 
-library("MCMCglmm")
-library(ape)
 library(brms)
 library(rstan)
 library(RColorBrewer) # needed for some extra colours in one of the graphs
-library(ggmcmc)
-library(ggthemes)
-library(ggridges)
 library(vegan)
 library(phyloseq)
 library(ggplot2)
-library(bayesplot)
-library(bayestestR)
-library(brms)
-library(MCMCglmm)
-library(doParallel)
-library(parallel)
-library(magrittr)
-library(dplyr)
-library(purrr)
-library(forcats)
-library(tidyr)
-library(modelr)
-library(ggdist)
-library(tidybayes)
-library(ggplot2)
 library(cowplot)
-library(rstan)
-library(brms)
-library(ggrepel)
-library(RColorBrewer)
-library(gganimate)
-library(posterior)
-library(distributional)
 
 ### we don't include sex because it does not converge
 PS.TSS <- readRDS("tmp/PS.TSS_filtered.rds")
@@ -43,6 +16,13 @@ Bac <- subset_taxa(PS.TSS, Kingdom %in%"Bacteria")
 Parasite <- subset_taxa(PS.TSS, Genus %in%c("Eimeria", "Cryptosporidium", "Syphacia", "Aspiculuris", "Ascaridida", "Mastophorus","Trichuris", "Hymenolepis", "Tritrichomonas"))
 Fungi <- subset_taxa(PS.TSS, Phylum %in% c("Mucoromycota", "Ascomycota", "Basidiomycota"))
 Diet <- subset_taxa(PS.TSS, Phylum %in% c("Anthophyta", "Phragmoplastophyta", "Charophyta", "Ochrophyta"))
+
+get_taxa_unique(PS.TSS, "Kingdom")
+
+# How many annotated genera?
+Euk <- subset_taxa(PS.TSS, Kingdom %in%"Eukarya")
+length(get_taxa_unique(Euk, "Genus"))-length(grep("Unknown", get_taxa_unique(Euk, "Genus")))
+length(get_taxa_unique(Bac, "Genus"))-length(grep("Unknown", get_taxa_unique(Bac, "Genus")))
 
 ############# First create dyad data#######################
 data.dyad <- readRDS("tmp/data.dyad.RDS")
@@ -187,7 +167,7 @@ data.dyad$ait_pla <- ait_pla
 
 #################################
 ### uploading models
-modelA <- readRDS("tmp/BRMmodelA.rds")
+FigumodelA <- readRDS("tmp/BRMmodelA.rds")
 modelJ <- readRDS("tmp/BRMmodelJac.rds")
 
 modelJ_fun <- readRDS("tmp/BRMmodelJ_fun.rds")
@@ -387,12 +367,12 @@ yearA <- ggplot(res.dfA, aes(x=year_Estimate, y=Domain, colour=Domain))+
     theme(legend.position = "none")
 
 
-Fig2 <- plot_grid(genJ, genA, HeJ, HeA, HxJ, HxA,
+Fig2 <- plot_grid(genJ, genA, HeJ, HeA, HxJ, HxA, spaJ, spaA, yearJ, yearA,
                   labels="auto", ncol=2)
 
 FigS1 <- plot_grid(spaJ, spaA, yearJ, yearA, labels="auto") 
 
-ggsave("fig/figure2.pdf", Fig2, width=170, height=180, units="mm", dpi=300)
+ggsave("fig/figure2.pdf", Fig2, width=170, height=200, units="mm", dpi=300)
 
 ggsave("fig/figureS1.pdf", FigS1, width=170, height=150, units="mm", dpi=300)
 
@@ -410,6 +390,14 @@ newdata0 <- data.frame(He=seq_range(0:1, n=51),
 newdata0.5 <- data.frame(He=seq_range(0:1, n=51),
                        year=rep(0, n=51),
                        HI=rep(0.5, n=51),
+                       Hx=rep(median(data.dyad$Hx), n=51),
+                       IDA=rep("AA_0197", 51),
+                       IDB=rep("AA_0089", 51),
+                       spatial=rep(median(data.dyad$spatial)))
+
+newdata0.63 <- data.frame(He=seq_range(0:1, n=51),
+                       year=rep(0, n=51),
+                       HI=rep(0.63, n=51),
                        Hx=rep(median(data.dyad$Hx), n=51),
                        IDA=rep("AA_0197", 51),
                        IDB=rep("AA_0089", 51),
@@ -444,6 +432,17 @@ gen5 <-ggplot(pred.df5, aes(x=He, y=.epred))+
     ylim(-2.04, -1.84)+
     labs(fill="level:")+
     ggtitle("Genetic distance = 0.5")+
+    theme_bw(base_size=10)
+
+pred.df63 <- add_epred_draws(newdata0.63, modelA)
+gen63 <-ggplot(pred.df63, aes(x=He, y=.epred))+
+    stat_lineribbon(size=0.5, .width=c(.95, .8, .5), alpha=0.5) +
+#    scale_fill_manual(values=microshades_palette("micro_purple"))+
+                ylab("Gut community similarity")+
+    xlab("He")+
+    ylim(-2.04, -1.84)+
+    labs(fill="level:")+
+    ggtitle("Genetic distance = 0.63")+
     theme_bw(base_size=10)
 
 
@@ -482,6 +481,17 @@ genF5 <-ggplot(predF5, aes(x=He, y=.epred))+
                 ggtitle("Genetic distance = 0.5")+
                 theme_bw(base_size=10)
 
+predF63 <- add_epred_draws(newdata0.63, modelA_fun)
+genF63 <-ggplot(predF63, aes(x=He, y=.epred))+
+    stat_lineribbon(size=0.5, .width=c(.95, .8, .5), alpha=0.5) +
+#    scale_fill_manual(values=microshades_palette("micro_purple"))+
+    ylim(0.3, 0.55)+
+                ylab("Gut community similarity")+
+                xlab("He")+
+                labs(fill="level:")+
+                ggtitle("Genetic distance = 0.63")+
+                theme_bw(base_size=10)
+
 
 predF1 <- add_epred_draws(newdata1, modelA_fun)
 genF1 <-ggplot(predF1, aes(x=He, y=.epred))+
@@ -493,14 +503,17 @@ genF1 <-ggplot(predF1, aes(x=He, y=.epred))+
     xlim(min(data.dyad$He[data.dyad$HI>0.9]), max(data.dyad$He[data.dyad$HI>0.9]))+
                 labs(fill="level:")+
                 ggtitle("Genetic distance = 0.9")+
-                theme_bw(base_size=10)
+
+    theme_bw(base_size=10)
 
 All <- plot_grid(gen0, gen5, gen1, labels="auto", rel_widths=c(0.7,1,0.7), nrow=1)
 Fun <- plot_grid(genF0, genF5, genF1, labels=c("d", "e", "f"), rel_widths=c(0.7,1,0.7), nrow=1)
 
 Fig3 <- plot_grid(All, Fun, ncol=1)
 
-ggplot2::ggsave(file="fig/Fig3.pdf", Fig3, width = 180, height = 170, dpi = 300, units="mm")
+ggplot2::ggsave(file="fig/Fig3.pdf", Fig3, width = 185, height = 170, dpi = 300, units="mm")
+
+summary(data.dyad$HI>0.9)
 
 ########################Figure 4 ab
 # plotting bacteria~fungi
