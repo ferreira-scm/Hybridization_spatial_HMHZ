@@ -167,7 +167,7 @@ data.dyad$ait_pla <- ait_pla
 
 #################################
 ### uploading models
-FigumodelA <- readRDS("tmp/BRMmodelA.rds")
+modelA <- readRDS("tmp/BRMmodelA.rds")
 modelJ <- readRDS("tmp/BRMmodelJac.rds")
 
 modelJ_fun <- readRDS("tmp/BRMmodelJ_fun.rds")
@@ -226,10 +226,10 @@ res.dfA$Domain <- factor(res.dfA$Domain, level=c( "Diet", "Bacteria", "Parasite"
 coul <- c("#136f63", "#032b43", "#3f88c5", "#ffba08", "#d00000")
 
 genJ <- ggplot(res.df, aes(x=HI_Estimate, y=Domain, colour=Domain))+
-    geom_vline(xintercept=0, linetype="dashed", linewidth=1)+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=0.9)+
     geom_errorbar(aes(xmin=HI_lCI, xmax=HI_uCI, colour=Domain),
-                  size=1, width=0.4)+
-    geom_point(size=3)+
+                  size=1, width=0.3)+
+    geom_point(size=2)+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
@@ -238,10 +238,10 @@ genJ <- ggplot(res.df, aes(x=HI_Estimate, y=Domain, colour=Domain))+
     theme(legend.position = "none")
 
 genA <- ggplot(res.dfA, aes(x=HI_Estimate, y=Domain, colour=Domain))+
-    geom_vline(xintercept=0, linetype="dashed", linewidth=1)+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=0.9)+
     geom_errorbar(aes(xmin=HI_lCI, xmax=HI_uCI, colour=Domain),
-                  size=1, width=0.4)+
-    geom_point(size=3)+
+                  size=1, width=0.3)+
+    geom_point(size=2)+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
@@ -250,10 +250,10 @@ genA <- ggplot(res.dfA, aes(x=HI_Estimate, y=Domain, colour=Domain))+
     theme(legend.position = "none")
 
 HeJ <- ggplot(res.df, aes(x=He_Estimate, y=Domain, colour=Domain))+
-    geom_vline(xintercept=0, linetype="dashed", linewidth=1)+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=0.9)+
     geom_errorbar(aes(xmin=He_lCI, xmax=He_uCI, colour=Domain),
-                  size=1, width=0.4)+
-    geom_point(size=3)+
+                  size=1, width=0.3)+
+    geom_point(size=2)+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
@@ -262,10 +262,10 @@ HeJ <- ggplot(res.df, aes(x=He_Estimate, y=Domain, colour=Domain))+
     theme(legend.position = "none")
 
 HeA <- ggplot(res.dfA, aes(x=He_Estimate, y=Domain, colour=Domain))+
-    geom_vline(xintercept=0, linetype="dashed", linewidth=1)+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=0.9)+
     geom_errorbar(aes(xmin=He_lCI, xmax=He_uCI, colour=Domain),
-                  size=1, width=0.4)+
-    geom_point(size=3)+
+                  size=1, width=0.3)+
+    geom_point(size=2)+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
@@ -274,10 +274,10 @@ HeA <- ggplot(res.dfA, aes(x=He_Estimate, y=Domain, colour=Domain))+
     theme(legend.position = "none")
 
 HIHeJ <- ggplot(res.df, aes(x=HI_He_Estimate, y=Domain, colour=Domain))+
-    geom_vline(xintercept=0, linetype="dashed", linewidth=1)+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=0.9)+
     geom_errorbar(aes(xmin=HI_He_lCI, xmax=HI_He_uCI, colour=Domain),
-                  size=1, width=0.4)+
-    geom_point(size=3)+
+                  size=1, width=0.3)+
+    geom_point(size=2)+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
@@ -286,10 +286,10 @@ HIHeJ <- ggplot(res.df, aes(x=HI_He_Estimate, y=Domain, colour=Domain))+
     theme(legend.position = "none")
 
 HIHeA <- ggplot(res.dfA, aes(x=HI_He_Estimate, y=Domain, colour=Domain))+
-    geom_vline(xintercept=0, linetype="dashed", linewidth=1)+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=0.9)+
     geom_errorbar(aes(xmin=HI_He_lCI, xmax=HI_He_uCI, colour=Domain),
-                  size=1, width=0.4)+
-    geom_point(size=3)+
+                  size=1, width=0.3)+
+    geom_point(size=2)+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
@@ -298,10 +298,10 @@ HIHeA <- ggplot(res.dfA, aes(x=HI_He_Estimate, y=Domain, colour=Domain))+
     theme(legend.position = "none")
 
 HxJ <- ggplot(res.df, aes(x=Hx_Estimate, y=Domain, colour=Domain))+
-    geom_vline(xintercept=0, linetype="dashed", linewidth=1)+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=0.9)+
     geom_errorbar(aes(xmin=Hx_lCI, xmax=Hx_uCI, colour=Domain),
-                  size=1, width=0.4)+
-    geom_point(size=3)+
+                  size=1, width=0.3)+
+    geom_point(size=2)+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
@@ -310,10 +310,10 @@ HxJ <- ggplot(res.df, aes(x=Hx_Estimate, y=Domain, colour=Domain))+
     theme(legend.position = "none")
 
 HxA <- ggplot(res.dfA, aes(x=Hx_Estimate, y=Domain, colour=Domain))+
-    geom_vline(xintercept=0, linetype="dashed", linewidth=1)+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=0.9)+
     geom_errorbar(aes(xmin=Hx_lCI, xmax=Hx_uCI, colour=Domain),
-                  size=1, width=0.4)+
-    geom_point(size=3)+
+                  size=1, width=0.3)+
+    geom_point(size=2)+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
@@ -322,10 +322,10 @@ HxA <- ggplot(res.dfA, aes(x=Hx_Estimate, y=Domain, colour=Domain))+
     theme(legend.position = "none")
 
 spaJ <- ggplot(res.df, aes(x=spatial_Estimate, y=Domain, colour=Domain))+
-    geom_vline(xintercept=0, linetype="dashed", linewidth=1)+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=0.9)+
     geom_errorbar(aes(xmin=spatial_lCI, xmax=spatial_uCI, colour=Domain),
-                  size=1, width=0.4)+
-    geom_point(size=3)+
+                  size=1, width=0.3)+
+    geom_point(size=2)+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
@@ -333,10 +333,10 @@ spaJ <- ggplot(res.df, aes(x=spatial_Estimate, y=Domain, colour=Domain))+
     theme_classic(base_size=12)+
     theme(legend.position = "none")
 spaA <- ggplot(res.dfA, aes(x=spatial_Estimate, y=Domain, colour=Domain))+
-    geom_vline(xintercept=0, linetype="dashed", linewidth=1)+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=0.9)+
     geom_errorbar(aes(xmin=spatial_lCI, xmax=spatial_uCI, colour=Domain),
-                  size=1, width=0.4)+
-    geom_point(size=3)+
+                  size=1, width=0.3)+
+    geom_point(size=2)+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
@@ -344,10 +344,10 @@ spaA <- ggplot(res.dfA, aes(x=spatial_Estimate, y=Domain, colour=Domain))+
     theme_classic(base_size=12)+
     theme(legend.position = "none")
 yearJ <- ggplot(res.df, aes(x=year_Estimate, y=Domain, colour=Domain))+
-    geom_vline(xintercept=0, linetype="dashed", linewidth=1)+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=0.9)+
     geom_errorbar(aes(xmin=year_lCI, xmax=year_uCI, colour=Domain),
-                  size=1, width=0.4)+
-    geom_point(size=3)+
+                  size=1, width=0.3)+
+    geom_point(size=2)+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
@@ -355,10 +355,10 @@ yearJ <- ggplot(res.df, aes(x=year_Estimate, y=Domain, colour=Domain))+
     theme_classic(base_size=12)+
     theme(legend.position = "none")
 yearA <- ggplot(res.dfA, aes(x=year_Estimate, y=Domain, colour=Domain))+
-        geom_vline(xintercept=0, linetype="dashed", linewidth=1)+
+        geom_vline(xintercept=0, linetype="dashed", linewidth=0.9)+
     geom_errorbar(aes(xmin=year_lCI, xmax=year_uCI, colour=Domain),
-                  size=1, width=0.4)+
-    geom_point(size=3)+
+                  size=1, width=0.3)+
+    geom_point(size=2)+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
@@ -370,13 +370,15 @@ yearA <- ggplot(res.dfA, aes(x=year_Estimate, y=Domain, colour=Domain))+
 Fig2 <- plot_grid(genJ, genA, HeJ, HeA, HxJ, HxA, spaJ, spaA, yearJ, yearA,
                   labels="auto", ncol=2)
 
-FigS1 <- plot_grid(spaJ, spaA, yearJ, yearA, labels="auto") 
+#FigS1 <- plot_grid(spaJ, spaA, yearJ, yearA, labels="auto") 
 
 ggsave("fig/figure2.pdf", Fig2, width=170, height=200, units="mm", dpi=300)
 
-ggsave("fig/figureS1.pdf", FigS1, width=170, height=150, units="mm", dpi=300)
+#ggsave("fig/figureS1.pdf", FigS1, width=170, height=150, units="mm", dpi=300)
 
 
+library(modelr)
+library(tidybayes)
 
 ######################## Figure 3: interaction
 newdata0 <- data.frame(He=seq_range(0:1, n=51),
@@ -417,7 +419,7 @@ gen0 <- ggplot(pred.df0, aes(x=He, y=.epred))+
 #    scale_fill_manual(values=microshades_palette("micro_purple"))+
     ylab("Gut community similarity")+
     xlab("He")+
-    ylim(-2.04, -1.84)+
+    ylim(-2.03, -1.85)+
     xlim(min(data.dyad$He[data.dyad$HI<0.1]), max(data.dyad$He[data.dyad$HI<0.1]))+
                 labs(fill="level:")+
                 ggtitle("Genetic distance = 0.1")+
@@ -429,7 +431,7 @@ gen5 <-ggplot(pred.df5, aes(x=He, y=.epred))+
 #    scale_fill_manual(values=microshades_palette("micro_purple"))+
                 ylab("Gut community similarity")+
     xlab("He")+
-    ylim(-2.04, -1.84)+
+    ylim(-2.03, -1.85)+
     labs(fill="level:")+
     ggtitle("Genetic distance = 0.5")+
     theme_bw(base_size=10)
@@ -440,7 +442,7 @@ gen63 <-ggplot(pred.df63, aes(x=He, y=.epred))+
 #    scale_fill_manual(values=microshades_palette("micro_purple"))+
                 ylab("Gut community similarity")+
     xlab("He")+
-    ylim(-2.04, -1.84)+
+    ylim(-2.03, -1.85)+
     labs(fill="level:")+
     ggtitle("Genetic distance = 0.63")+
     theme_bw(base_size=10)
@@ -452,7 +454,7 @@ gen1 <-ggplot(pred.df1, aes(x=He, y=.epred))+
 #    scale_fill_manual(values=microshades_palette("micro_purple"))+
                 ylab("Gut community similarity")+
     xlab("He")+
-    ylim(-2.04, -1.84)+
+    ylim(-2.03, -1.85)+
     xlim(min(data.dyad$He[data.dyad$HI>0.9]), max(data.dyad$He[data.dyad$HI>0.9]))+
                 labs(fill="level:")+
                 ggtitle("Genetic distance = 0.9")+
@@ -464,7 +466,7 @@ genF0 <- ggplot(predF0, aes(x=He, y=.epred))+
 #    scale_fill_manual(values=microshades_palette("micro_purple"))+
                 ylab("Gut community similarity")+
     xlab("He")+
-    ylim(0.3, 0.55)+
+    ylim(0.3, 0.525)+
     xlim(min(data.dyad$He[data.dyad$HI<0.1]), max(data.dyad$He[data.dyad$HI<0.1]))+
                 labs(fill="level:")+
                 ggtitle("Genetic distance = 0.1")+
@@ -474,7 +476,7 @@ predF5 <- add_epred_draws(newdata0.5, modelA_fun)
 genF5 <-ggplot(predF5, aes(x=He, y=.epred))+
     stat_lineribbon(size=0.5, .width=c(.95, .8, .5), alpha=0.5) +
 #    scale_fill_manual(values=microshades_palette("micro_purple"))+
-    ylim(0.3, 0.55)+
+    ylim(0.3, 0.525)+
                 ylab("Gut community similarity")+
                 xlab("He")+
                 labs(fill="level:")+
@@ -485,7 +487,7 @@ predF63 <- add_epred_draws(newdata0.63, modelA_fun)
 genF63 <-ggplot(predF63, aes(x=He, y=.epred))+
     stat_lineribbon(size=0.5, .width=c(.95, .8, .5), alpha=0.5) +
 #    scale_fill_manual(values=microshades_palette("micro_purple"))+
-    ylim(0.3, 0.55)+
+    ylim(0.3, 0.525)+
                 ylab("Gut community similarity")+
                 xlab("He")+
                 labs(fill="level:")+
@@ -499,11 +501,10 @@ genF1 <-ggplot(predF1, aes(x=He, y=.epred))+
 #    scale_fill_manual(values=microshades_palette("micro_purple"))+
                 ylab("Gut community similarity")+
     xlab("He")+
-    ylim(0.3, 0.55)+
+    ylim(0.3, 0.525)+
     xlim(min(data.dyad$He[data.dyad$HI>0.9]), max(data.dyad$He[data.dyad$HI>0.9]))+
-                labs(fill="level:")+
-                ggtitle("Genetic distance = 0.9")+
-
+    labs(fill="level:")+
+    ggtitle("Genetic distance = 0.9")+
     theme_bw(base_size=10)
 
 All <- plot_grid(gen0, gen5, gen1, labels="auto", rel_widths=c(0.7,1,0.7), nrow=1)
@@ -511,7 +512,7 @@ Fun <- plot_grid(genF0, genF5, genF1, labels=c("d", "e", "f"), rel_widths=c(0.7,
 
 Fig3 <- plot_grid(All, Fun, ncol=1)
 
-ggplot2::ggsave(file="fig/Fig3.pdf", Fig3, width = 185, height = 170, dpi = 300, units="mm")
+ggplot2::ggsave(file="fig/Fig3.pdf", Fig3, width = 190, height = 140, dpi = 300, units="mm")
 
 summary(data.dyad$HI>0.9)
 

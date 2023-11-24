@@ -145,6 +145,13 @@ for (i in 1:length(genus)){
     }
 }
 
+##### sanity check
+
+lab0 <- subset_samples(lab, dpi%in%c(0))
+lab6 <- subset_samples(lab, dpi%in%c(6))
+
+table(lab6@sam_data$Genome, lab6@sam_data$Strain)
+
 ############################################################## day 0 and day 6
 lab <- subset_samples(l.PS.TSS, dpi%in%c(0, 6))
 
@@ -295,6 +302,7 @@ scalecols<-c("He", "dpi")
 for(i in 1:ncol(lab.dyad[,which(colnames(lab.dyad)%in%scalecols)])){
     lab.dyad[,which(colnames(lab.dyad)%in%scalecols)][,i]<-range.use(lab.dyad[,which(colnames(lab.dyad)%in%scalecols)][,i],0,1)
     }
+
 
 modelJ<-brm(Jac~1+ HI+He+dpi+
                 (1|mm(IDA,IDB)),
@@ -470,8 +478,34 @@ HeA <- ggplot(res.dfA, aes(x=He_Estimate, y=Domain, colour=Domain))+
     theme_classic(base_size=12)+
     theme(legend.position = "none")
 
-Fig5 <- plot_grid(genJ, genA, HeJ, HeA,
+
+dpiJ <- ggplot(res.df, aes(x=dpi_Estimate, y=Domain, colour=Domain))+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=1)+
+    geom_errorbar(aes(xmin=dpi_lCI, xmax=dpi_uCI, colour=Domain),
+                  size=1, width=0.4)+
+    geom_point(size=3)+
+#    scale_x_reverse()+
+   scale_colour_manual(values=coul)+
+#    scale_discrete_vi()+
+    labs(x="Experimental infection", y="")+
+    theme_classic(base_size=12)+
+    theme(legend.position = "none")
+
+dpiA <- ggplot(res.dfA, aes(x=dpi_Estimate, y=Domain, colour=Domain))+
+    geom_vline(xintercept=0, linetype="dashed", linewidth=1)+
+    geom_errorbar(aes(xmin=dpi_lCI, xmax=dpi_uCI, colour=Domain),
+                  size=1, width=0.4)+
+    geom_point(size=3)+
+#    scale_x_reverse()+
+   scale_colour_manual(values=coul)+
+#    scale_discrete_vi()+
+    labs(x="Experimental infection", y="")+
+    theme_classic(base_size=12)+
+    theme(legend.position = "none")
+
+
+Fig5 <- plot_grid(genJ, genA, HeJ, HeA, dpiJ, dpiA,
                   labels="auto", ncol=2)
 
 
-ggsave("fig/figure5.pdf", Fig5, width=170, height=85, units="mm", dpi=300)
+ggsave("fig/figure5.pdf", Fig5, width=170, height=100, units="mm", dpi=300)
