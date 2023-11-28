@@ -33,7 +33,7 @@ source("R/Correlation_net.R")
 
 #### preprocessing: filtering and transforming
 
-labPS <- readRDS("/SAN/Susanas_den/gitProj/Eimeria_AmpSeq/tmp/Lab/PhyloSeqList_All_Tax_New.Rds")
+labPS <- readRDS("data/PhyloSeqList_All_Tax_New.Rds")
 
 # this is our filtering function
 fil <- function(ps){
@@ -508,4 +508,5 @@ Fig5 <- plot_grid(genJ, genA, HeJ, HeA, dpiJ, dpiA,
                   labels="auto", ncol=2)
 
 
-ggsave("fig/figure5.pdf", Fig5, width=170, height=100, units="mm", dpi=300)
+ggsave("fig/figure5.pdf", Fig5, width=170, height=120, units="mm", dpi=300)
+

@@ -23,8 +23,10 @@ Bac
 ## prevalebce filtering of 5%
 KeepTaxap <- microbiome::prevalence(Bac)>0.05
 Bac <- phyloseq::prune_taxa(KeepTaxap, Bac)
+
 KeepTaxap <- microbiome::prevalence(Euk)>0.05
 Euk <- phyloseq::prune_taxa(KeepTaxap, Euk)
+
 #### spiec easi
 pargs <- list(rep.num=1000, seed=10010, ncores=90, thresh=0.05)
 ## mb
