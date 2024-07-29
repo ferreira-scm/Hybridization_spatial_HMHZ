@@ -513,7 +513,7 @@ all <- vegan::vegdist(lab@otu_table, method="jaccard", binary=TRUE)
 
 
 All_J <- plot_ordination(lab, all, type="samples", color="Genome", shape="dpi")+
-    geom_point(size=5)+
+    geom_point(size=2)+
     labs(x="Axis 1", y="Axis 2")+    
     scale_colour_manual(values=c("#beeac3", "#053399", "#7e1800"))+
     #geom_polygon(aes(fill="Hyb"))+
@@ -525,7 +525,7 @@ fun[is.na(fun)] <- 0 # defining those as 0 distances
 #Bac.ord <- ordinate(Bac, "NMDS", "jaccard")
 
 Fungi_J <- plot_ordination(Fungi, fun, type="samples", color="Genome", shape="dpi")+
-    geom_point(size=5)+
+    geom_point(size=2)+
     scale_colour_manual(values=c("#beeac3", "#053399", "#7e1800"))+
     labs(x="Axis 1", y="Axis 2")+    
 #    geom_polygon(aes(fill="Genome"))+
