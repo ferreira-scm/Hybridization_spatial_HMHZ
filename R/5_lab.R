@@ -145,12 +145,6 @@ for (i in 1:length(genus)){
     }
 }
 
-##### sanity check
-
-lab0 <- subset_samples(lab, dpi%in%c(0))
-lab6 <- subset_samples(lab, dpi%in%c(6))
-
-table(lab6@sam_data$Genome, lab6@sam_data$Strain)
 
 ############################################################## day 0 and day 6
 lab <- subset_samples(l.PS.TSS, dpi%in%c(0, 6))
@@ -510,3 +504,34 @@ Fig5 <- plot_grid(genJ, genA, HeJ, HeA, dpiJ, dpiA,
 
 ggsave("fig/figure5.pdf", Fig5, width=170, height=120, units="mm", dpi=300)
 
+## plotting
+all <- vegan::vegdist(lab@otu_table, method="jaccard", binary=TRUE)
+
+#all[is.na(all)] <- 0 # defining those as 0 distances
+
+#Bac.ord <- ordinate(Bac, "NMDS", "jaccard")
+
+
+All_J <- plot_ordination(lab, all, type="samples", color="Genome", shape="dpi")+
+    geom_point(size=5)+
+    labs(x="Axis 1", y="Axis 2")+    
+    scale_colour_manual(values=c("#beeac3", "#053399", "#7e1800"))+
+    #geom_polygon(aes(fill="Hyb"))+
+    theme_classic()
+
+fun <- vegan::vegdist(Fungi@otu_table, method="jaccard", )
+fun[is.na(fun)] <- 0 # defining those as 0 distances
+
+#Bac.ord <- ordinate(Bac, "NMDS", "jaccard")
+
+Fungi_J <- plot_ordination(Fungi, fun, type="samples", color="Genome", shape="dpi")+
+    geom_point(size=5)+
+    scale_colour_manual(values=c("#beeac3", "#053399", "#7e1800"))+
+    labs(x="Axis 1", y="Axis 2")+    
+#    geom_polygon(aes(fill="Genome"))+
+    theme_classic()
+
+
+Ordi <- plot_grid(All_J, Fungi_J, labels=c("C", "D"))
+
+ggsave("fig/figure4_CD.pdf", Ordi, width=170, height=80, units="mm", dpi=300)
