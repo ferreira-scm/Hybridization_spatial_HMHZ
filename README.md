@@ -2,7 +2,7 @@
 Subspecies divergence, hybridisation and the spatial environment shape phylosymbiosis in the microbiome of house mice
 
 
-data/ --> data necessary to run these scripts; these are a list of phyloseq objects for the wild dataset and lab dataset. Each phyloseq object corresponds to OTU table, taxonomic table and metadata for each amplicon, after identification and quality screening of ASVs and taxonomic annotation. Scripts are found in the repository https://github.com/ferreira-scm/Eimeria_AmpSeq. Methods are described in the "Amplicon sequencing allows differential quantification of closely related parasite species: an example from rodent coccidia (Eimeria)" manuscript https://doi.org/10.1186/s13071-023-05800-6
+data/ --> data necessary to run these scripts; these are a list of phyloseq objects for the wild dataset and lab dataset. Each phyloseq object corresponds to OTU table, taxonomic table and metadata for each amplicon, after identification and quality screening of ASVs and taxonomic annotation.
 
 R/ --> scripts
 
