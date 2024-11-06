@@ -233,7 +233,7 @@ genJ <- ggplot(res.df, aes(x=HI_Estimate, y=Domain, colour=Domain))+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
-    labs(x="Genetic distance", y="")+
+    labs(x="Subspecies' genetic distance", y="")+
     theme_classic(base_size=12)+
     theme(legend.position = "none")
 
@@ -257,7 +257,7 @@ HeJ <- ggplot(res.df, aes(x=He_Estimate, y=Domain, colour=Domain))+
 #    scale_x_reverse()+
    scale_colour_manual(values=coul)+
 #    scale_discrete_vi()+
-    labs(x="hHe-dist", y="")+
+    labs(x="hHe-distance", y="")+
     theme_classic(base_size=12)+
     theme(legend.position = "none")
 
