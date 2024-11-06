@@ -7,17 +7,19 @@ Closely related host species share similar symbionts, but the effects of host ge
 
 ## Repository structure
 
-data/ --> data necessary to run these scripts; these are a list of phyloseq objects for the wild dataset and lab dataset. Each phyloseq object corresponds to OTU table, taxonomic table and metadata for each amplicon, after identification and quality screening of ASVs and taxonomic annotation. Data description can be found here: https://doi.org/10.1186/s13071-023-05800-6
+### data/ --> data necessary to run these scripts; these are a list of phyloseq objects for the wild dataset and lab dataset. Each phyloseq object corresponds to OTU table, taxonomic table and metadata for each amplicon, after identification and quality screening of ASVs and taxonomic annotation. Data description can be found here: https://doi.org/10.1186/s13071-023-05800-6
 
-R/ --> scripts for data analysis
+### R/ --> scripts for data analysis
 
-tmp/ --> temporary files created from running the scripts
+### tmp/ --> temporary files created from running the scripts
 
 fig/ --> figures
 
-Briefly:
+## Brief description of each script:
 
-R/1_filtering.R --> Needs files data/PhyloSeqList_HMHZ_All.Rds and data/EimeriaSpeciesAssign.RDS
+### R/1_filtering.R
+
+Needs files data/PhyloSeqList_HMHZ_All.Rds and data/EimeriaSpeciesAssign.RDS
 
 quality filtering ASVs per amplicon and merging.
 
@@ -44,7 +46,9 @@ Co-occurrence networks with only positive edges of ASV abundace per genus. Merge
 
 final phyloseq object for further analysis is "tmp/PS.TSS_filtered.rds"
 
-R/2_dyadicMCMC_full.R --> Needs file "tmp/PS.TSS_filtered.rds"
+### R/2_dyadicMCMC_full.R
+
+Needs file "tmp/PS.TSS_filtered.rds"
 
 prepare dyadic data and do distance-based model for all the taxa (full model) with brms.
 
@@ -52,14 +56,17 @@ model checks
 
 plotting figure 1
 
+### R/3_dyadicMCMC_groups.R
 
-R/3_dyadicMCMC_groups.R --> Needs file "tmp/PS.TSS_filtered.rds"
+Needs file "tmp/PS.TSS_filtered.rds"
 
 prepare data and do distance based model for parasites, plants, fungi and bacteria
 
 plotting figure 2 and 3 and 4ab
 
-R/4_Network.R --> Needs file "tmp/PS.TSS_filtered.rds"
+### R/4_Network.R 
+
+Needs file "tmp/PS.TSS_filtered.rds"
 
 Co-occurrence network of Fungi, Parasites and Bacteria
 
