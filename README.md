@@ -1,15 +1,19 @@
 # Hybridization_spatial_HMHZ
-Subspecies divergence, hybridisation and the spatial environment shape phylosymbiosis in the microbiome of house mice
+Eco-evolutionary dynamics of host-microbiome interactions in a natural population of closely related mice subspecies and their hybrids
+doi: https://doi.org/10.1101/2023.12.11.571054 
 
+## Project description
+Closely related host species share similar symbionts, but the effects of host genetic admixture and environmental conditions on these communities remain largely unknown. Here, we investigated the influence of genetic admixture on the intestinal R2C17 prokaryotic and eukaryotic communities (fungi and parasites) of two house mouse subspecies (Mus musculus domesticus and M. m. musculus) and their hybrids in two settings: (1) wild-caught mice from the European hybrid zone and (2) wild-derived inbred mice in a controlled laboratory environment before and during a community perturbation (infection).
 
-data/ --> data necessary to run these scripts; these are a list of phyloseq objects for the wild dataset and lab dataset. Each phyloseq object corresponds to OTU table, taxonomic table and metadata for each amplicon, after identification and quality screening of ASVs and taxonomic annotation.
+## Repository structure
 
-R/ --> scripts
+data/ --> data necessary to run these scripts; these are a list of phyloseq objects for the wild dataset and lab dataset. Each phyloseq object corresponds to OTU table, taxonomic table and metadata for each amplicon, after identification and quality screening of ASVs and taxonomic annotation. Data description can be found here: https://doi.org/10.1186/s13071-023-05800-6
+
+R/ --> scripts for data analysis
 
 tmp/ --> temporary files created from running the scripts
 
 fig/ --> figures
-
 
 Briefly:
 
@@ -31,7 +35,7 @@ Small adjustments to metadata.
 
 Correlation co-occurrence networks for all known parasite genera.
 
-Is network modular? Only Oxyurida. We do phylogenetic analysis as done for Eimeria in Ferreira et al. 2023.
+Is network modular? Only Oxyurida is not. We do phylogenetic analysis as done for Eimeria in Ferreira et al. 2023.
 
 Readjust genera names
 
@@ -60,3 +64,7 @@ R/4_Network.R --> Needs file "tmp/PS.TSS_filtered.rds"
 Co-occurrence network of Fungi, Parasites and Bacteria
 
 R/5_lab.R --> Needs file "data/PhyloSeqList_All_Tax_New.Rds"
+
+does the same filtering procedure as in R/1_filtering.R
+
+models lab data as in R/2_dyadicMCMC_full.R and R/3_dyadicMCMC_groups.R
