@@ -3,7 +3,7 @@ Eco-evolutionary dynamics of host-microbiome interactions in a natural populatio
 doi: https://doi.org/10.1101/2023.12.11.571054 
 
 ## Project description
-Closely related host species share similar symbionts, but the effects of host genetic admixture and environmental conditions on these communities remain largely unknown. Here, we investigated the influence of genetic admixture on the intestinal R2C17 prokaryotic and eukaryotic communities (fungi and parasites) of two house mouse subspecies (Mus musculus domesticus and M. m. musculus) and their hybrids in two settings: (1) wild-caught mice from the European hybrid zone and (2) wild-derived inbred mice in a controlled laboratory environment before and during a community perturbation (infection).
+Closely related host species share similar symbionts, but the effects of host genetic admixture and environmental conditions on these communities remain largely unknown. Here, we investigated the influence of genetic admixture on the intestinal prokaryotic and eukaryotic communities (fungi and parasites) of two house mouse subspecies (Mus musculus domesticus and M. m. musculus) and their hybrids in two settings: (1) wild-caught mice from the European hybrid zone and (2) wild-derived inbred mice in a controlled laboratory environment before and during a community perturbation (infection).
 
 ## Repository structure
 
